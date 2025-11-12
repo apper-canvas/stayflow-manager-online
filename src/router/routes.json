@@ -1,0 +1,204 @@
+{
+  "/": {
+    "allow": {
+      "when": {
+        "conditions": [
+          {
+            "label": "User must be authenticated to access dashboard",
+            "rule": "authenticated"
+          }
+        ]
+      },
+      "redirectOnDeny": "/login"
+    }
+  },
+  "/reservations": {
+    "allow": {
+      "when": {
+        "conditions": [
+          {
+            "label": "User must be authenticated to view reservations",
+            "rule": "authenticated"
+          }
+        ]
+      },
+      "redirectOnDeny": "/login"
+    }
+  },
+  "/reservations/new": {
+    "allow": {
+      "when": {
+        "conditions": [
+          {
+            "label": "User must be authenticated to create reservations",
+            "rule": "authenticated"
+          }
+        ]
+      },
+      "redirectOnDeny": "/login"
+    }
+  },
+  "/new-reservation": {
+    "allow": {
+      "when": {
+        "conditions": [
+          {
+            "label": "User must be authenticated to create reservations",
+            "rule": "authenticated"
+          }
+        ]
+      },
+      "redirectOnDeny": "/login"
+    }
+  },
+  "/rooms": {
+    "allow": {
+      "when": {
+        "conditions": [
+          {
+            "label": "User must be authenticated to view rooms",
+            "rule": "authenticated"
+          }
+        ]
+      },
+      "redirectOnDeny": "/login"
+    }
+  },
+  "/guests": {
+    "allow": {
+      "when": {
+        "conditions": [
+          {
+            "label": "User must be authenticated to view guests",
+            "rule": "authenticated"
+          }
+        ]
+      },
+      "redirectOnDeny": "/login"
+    }
+  },
+  "/billing": {
+    "allow": {
+      "when": {
+        "conditions": [
+          {
+            "label": "User must be authenticated to view billing",
+            "rule": "authenticated"
+          }
+        ]
+      },
+      "redirectOnDeny": "/login"
+    }
+  },
+  "/billing/new": {
+    "allow": {
+      "when": {
+        "conditions": [
+          {
+            "label": "User must be authenticated to create invoices",
+            "rule": "authenticated"
+          }
+        ]
+      },
+      "redirectOnDeny": "/login"
+    }
+  },
+  "/housekeeping": {
+    "allow": {
+      "when": {
+        "conditions": [
+          {
+            "label": "User must be authenticated to view housekeeping",
+            "rule": "authenticated"
+          }
+        ]
+      },
+      "redirectOnDeny": "/login"
+    }
+  },
+  "/housekeeping/new": {
+    "allow": {
+      "when": {
+        "conditions": [
+          {
+            "label": "User must be authenticated to create housekeeping tasks",
+            "rule": "authenticated"
+          }
+        ]
+      },
+      "redirectOnDeny": "/login"
+    }
+  },
+  "/login": {
+    "allow": {
+      "when": {
+        "conditions": [
+          {
+            "label": "Login page is public",
+            "rule": "public"
+          }
+        ]
+      }
+    }
+  },
+  "/signup": {
+    "allow": {
+      "when": {
+        "conditions": [
+          {
+            "label": "Signup page is public",
+            "rule": "public"
+          }
+        ]
+      }
+    }
+  },
+  "/callback": {
+    "allow": {
+      "when": {
+        "conditions": [
+          {
+            "label": "Callback page is public",
+            "rule": "public"
+          }
+        ]
+      }
+    }
+  },
+  "/error": {
+    "allow": {
+      "when": {
+        "conditions": [
+          {
+            "label": "Error page is public",
+            "rule": "public"
+          }
+        ]
+      }
+    }
+  },
+  "/reset-password/*": {
+    "allow": {
+      "when": {
+        "conditions": [
+          {
+            "label": "Reset password page is public",
+            "rule": "public"
+          }
+        ]
+      }
+    }
+  },
+  "/prompt-password/*": {
+    "allow": {
+      "when": {
+        "conditions": [
+          {
+            "label": "Prompt password page is public",
+            "rule": "public"
+          }
+        ]
+      }
+    }
+  }
+}

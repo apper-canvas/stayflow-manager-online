@@ -42,7 +42,7 @@ const NewReservation = () => {
         ]);
         setGuests(guestsData);
         setRooms(roomsData);
-        setAvailableRooms(roomsData.filter(room => room.status === 'available'));
+setAvailableRooms(roomsData.filter(room => room.status === 'available'));
       } catch (error) {
         toast.error('Failed to load form data');
       } finally {

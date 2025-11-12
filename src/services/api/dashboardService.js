@@ -1,40 +1,91 @@
-import roomData from "@/services/mockData/rooms.json";
-import reservationData from "@/services/mockData/reservations.json";
-
-// Simulate API delay
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+import { getApperClient } from '@/services/apperClient';
+import { toast } from 'react-toastify';
 
 export const getRoomStats = async () => {
-  await delay(300);
-  
-  const totalRooms = roomData.length;
-  const availableRooms = roomData.filter(room => room.status === "available").length;
-  const occupiedRooms = roomData.filter(room => room.status === "occupied").length;
-  const occupancyRate = Math.round((occupiedRooms / totalRooms) * 100);
-  
-  return {
-    totalRooms,
-    availableRooms,
-    occupiedRooms,
-    occupancyRate
-  };
+  try {
+    const apperClient = getApperClient();
+    const response = await apperClient.fetchRecords('rooms_c', {
+      fields: [
+        {"field": {"Name": "status_c"}}
+      ]
+    });
+
+    if (!response.success) {
+      console.error("Error fetching room stats:", response.message);
+      return {
+        totalRooms: 0,
+        availableRooms: 0,
+        occupiedRooms: 0,
+        occupancyRate: 0
+      };
+    }
+
+    const rooms = response.data || [];
+    const totalRooms = rooms.length;
+    const availableRooms = rooms.filter(room => room.status_c === "available").length;
+    const occupiedRooms = rooms.filter(room => room.status_c === "occupied").length;
+    const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
+    
+    return {
+      totalRooms,
+      availableRooms,
+      occupiedRooms,
+      occupancyRate
+    };
+  } catch (error) {
+    console.error("Error fetching room stats:", error?.response?.data?.message || error);
+    return {
+      totalRooms: 0,
+      availableRooms: 0,
+      occupiedRooms: 0,
+      occupancyRate: 0
+    };
+  }
 };
 
 export const getReservationStats = async () => {
-  await delay(250);
-  
-  const today = new Date().toISOString().split("T")[0];
-const checkInsToday = reservationData.filter(r => 
-    r.checkIn && r.checkIn.startsWith(today) && r.status === "confirmed"
-  ).length;
-  
-  // Calculate today's revenue (simplified)
-  const todayRevenue = reservationData
-.filter(r => r.checkIn && r.checkIn.startsWith(today))
-    .reduce((sum, r) => sum + r.totalAmount, 0);
-  
-  return {
-    checkInsToday,
-    todayRevenue
-  };
+  try {
+    const apperClient = getApperClient();
+    const today = new Date().toISOString().split("T")[0];
+    
+    const response = await apperClient.fetchRecords('reservations_c', {
+      fields: [
+        {"field": {"Name": "checkInDate_c"}},
+        {"field": {"Name": "status_c"}},
+        {"field": {"Name": "totalAmount_c"}}
+      ],
+      where: [{
+        "FieldName": "checkInDate_c",
+        "Operator": "EqualTo",
+        "Values": [today]
+      }]
+    });
+
+    if (!response.success) {
+      console.error("Error fetching reservation stats:", response.message);
+      return {
+        checkInsToday: 0,
+        todayRevenue: 0
+      };
+    }
+
+    const reservations = response.data || [];
+    const checkInsToday = reservations.filter(r => r.status_c === "confirmed").length;
+    
+    // Calculate today's revenue
+    const todayRevenue = reservations.reduce((sum, r) => {
+      return sum + (parseFloat(r.totalAmount_c) || 0);
+    }, 0);
+    
+    return {
+      checkInsToday,
+      todayRevenue
+    };
+  } catch (error) {
+    console.error("Error fetching reservation stats:", error?.response?.data?.message || error);
+    return {
+      checkInsToday: 0,
+      todayRevenue: 0
+    };
+  }
 };

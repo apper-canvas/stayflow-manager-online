@@ -30,14 +30,16 @@ const RoomsGrid = ({ selectedFloor, statusFilter }) => {
 
   const handleStatusChange = async (roomId, newStatus) => {
     try {
-      const room = rooms.find(r => r.Id === roomId);
+const room = rooms.find(r => r.Id === roomId);
       if (!room) return;
 
-      const updatedRoom = { ...room, status: newStatus };
-      await roomService.update(roomId, updatedRoom);
+      const updatedData = { status: newStatus };
+      const result = await roomService.update(roomId, updatedData);
       
-      setRooms(rooms.map(r => r.Id === roomId ? updatedRoom : r));
-      toast.success(`Room ${room.number} status updated to ${newStatus}`);
+      if (result) {
+        setRooms(rooms.map(r => r.Id === roomId ? { ...r, ...result } : r));
+        toast.success(`Room ${room.number} status updated to ${newStatus}`);
+      }
     } catch (err) {
       toast.error("Failed to update room status");
     }
@@ -53,11 +55,11 @@ const RoomsGrid = ({ selectedFloor, statusFilter }) => {
 
   // Filter rooms by floor and status
   let filteredRooms = rooms;
-  if (selectedFloor !== "all") {
-    filteredRooms = filteredRooms.filter(room => room.floor === parseInt(selectedFloor));
+if (selectedFloor !== "all") {
+    filteredRooms = filteredRooms.filter(room => (room.floor || room.floor_c) === parseInt(selectedFloor));
   }
   if (statusFilter !== "all") {
-    filteredRooms = filteredRooms.filter(room => room.status === statusFilter);
+    filteredRooms = filteredRooms.filter(room => (room.status || room.status_c) === statusFilter);
   }
 
   if (filteredRooms.length === 0) {

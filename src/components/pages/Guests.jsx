@@ -87,11 +87,11 @@ const handleSaveGuest = async (updatedGuest) => {
     loadGuests();
   }, []);
 
-  const filteredGuests = guests.filter(guest =>
-    guest.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    guest.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    guest.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    guest.phone.includes(searchQuery)
+const filteredGuests = guests.filter(guest =>
+    (guest.firstName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (guest.lastName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (guest.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (guest.phone || '').includes(searchQuery)
   );
 
   if (loading) return <Loading />;

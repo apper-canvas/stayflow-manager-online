@@ -1,141 +1,287 @@
-import mockTasks from '@/services/mockData/tasks.json';
+import { getApperClient } from "@/services/apperClient";
+import { toast } from "react-toastify";
+import React from "react";
 
-class TaskService {
-  constructor() {
-    this.tasks = [...mockTasks];
-    this.nextId = this.getNextId();
-  }
-
-  getNextId() {
-    return this.tasks.length > 0 ? Math.max(...this.tasks.map(t => t.Id)) + 1 : 1;
-  }
-
+const taskService = {
   async getAll() {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 200));
-    return [...this.tasks];
-  }
+    try {
+      const apperClient = getApperClient();
+      const response = await apperClient.fetchRecords('tasks_c', {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "roomNumber_c"}},
+          {"field": {"Name": "taskType_c"}},
+          {"field": {"Name": "description_c"}},
+          {"field": {"Name": "priority_c"}},
+          {"field": {"Name": "status_c"}},
+          {"field": {"Name": "assignedTo_c"}},
+          {"field": {"Name": "estimatedDuration_c"}},
+          {"field": {"Name": "notes_c"}},
+          {"field": {"Name": "completedAt_c"}},
+          {"field": {"Name": "roomId_c"}}
+        ]
+      });
+
+      if (!response.success) {
+        console.error("Error fetching tasks:", response.message);
+        toast.error(response.message);
+        return [];
+      }
+
+      if (!response?.data?.length) {
+        return [];
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching tasks:", error?.response?.data?.message || error);
+      return [];
+    }
+  },
 
   async getById(id) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    if (!Number.isInteger(id) || id <= 0) {
-      throw new Error('Invalid task ID');
+    try {
+      const apperClient = getApperClient();
+      const response = await apperClient.getRecordById('tasks_c', id, {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "roomNumber_c"}},
+          {"field": {"Name": "taskType_c"}},
+          {"field": {"Name": "description_c"}},
+          {"field": {"Name": "priority_c"}},
+          {"field": {"Name": "status_c"}},
+          {"field": {"Name": "assignedTo_c"}},
+          {"field": {"Name": "estimatedDuration_c"}},
+          {"field": {"Name": "notes_c"}},
+          {"field": {"Name": "completedAt_c"}},
+          {"field": {"Name": "roomId_c"}}
+        ]
+      });
+
+      if (!response?.data) {
+        return null;
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching task ${id}:`, error?.response?.data?.message || error);
+      return null;
     }
-    
-    const task = this.tasks.find(t => t.Id === id);
-    if (!task) {
-      throw new Error(`Task with ID ${id} not found`);
-    }
-    
-    return { ...task };
-  }
+  },
 
   async create(taskData) {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    if (!taskData || typeof taskData !== 'object') {
-      throw new Error('Invalid task data');
-    }
+    try {
+      const apperClient = getApperClient();
+      
+      // Filter only updateable fields
+      const updateableData = {
+        Name: taskData.title || taskData.Name || `Task-${Date.now()}`,
+        roomNumber_c: taskData.roomNumber,
+        taskType_c: taskData.title || taskData.taskType,
+        description_c: taskData.description,
+        priority_c: taskData.priority || 'medium',
+        status_c: taskData.status || 'pending',
+        assignedTo_c: taskData.assignedTo || '',
+        estimatedDuration_c: taskData.estimatedDuration ? parseInt(taskData.estimatedDuration) : null,
+        notes_c: taskData.notes || '',
+        completedAt_c: taskData.completedAt || null,
+        roomId_c: taskData.roomId ? parseInt(taskData.roomId) : null
+      };
 
-    const requiredFields = ['roomId', 'title', 'description'];
-    for (const field of requiredFields) {
-      if (!taskData[field] || !taskData[field].toString().trim()) {
-        throw new Error(`${field} is required`);
+      // Remove fields with null, undefined, or empty string values
+      Object.keys(updateableData).forEach(key => {
+        if (updateableData[key] === null || updateableData[key] === undefined || updateableData[key] === '') {
+          delete updateableData[key];
+        }
+      });
+
+      const response = await apperClient.createRecord('tasks_c', {
+        records: [updateableData]
+      });
+
+      if (!response.success) {
+        console.error("Error creating task:", response.message);
+        toast.error(response.message);
+        return null;
       }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success);
+        const failed = response.results.filter(r => !r.success);
+        
+        if (failed.length > 0) {
+          console.error(`Failed to create ${failed.length} tasks: ${JSON.stringify(failed)}`);
+          failed.forEach(record => {
+            record.errors?.forEach(error => toast.error(`${error.fieldLabel}: ${error}`));
+            if (record.message) toast.error(record.message);
+          });
+        }
+        return successful.length > 0 ? successful[0].data : null;
+      }
+    } catch (error) {
+      console.error("Error creating task:", error?.response?.data?.message || error);
+      return null;
     }
+  },
 
-    const newTask = {
-      Id: this.nextId++,
-      roomId: parseInt(taskData.roomId),
-      title: taskData.title.trim(),
-      description: taskData.description.trim(),
-      priority: taskData.priority || 'medium',
-      status: taskData.status || 'pending',
-      estimatedDuration: taskData.estimatedDuration || null,
-      notes: taskData.notes || '',
-      createdAt: taskData.createdAt || new Date().toISOString(),
-      updatedAt: taskData.updatedAt || new Date().toISOString(),
-      completedAt: null
-    };
+  async update(id, updatedData) {
+    try {
+      const apperClient = getApperClient();
+      
+      // Filter only updateable fields
+      const updateableFields = {
+        Id: id,
+        roomNumber_c: updatedData.roomNumber,
+        taskType_c: updatedData.title || updatedData.taskType,
+        description_c: updatedData.description,
+        priority_c: updatedData.priority,
+        status_c: updatedData.status,
+        assignedTo_c: updatedData.assignedTo,
+        estimatedDuration_c: updatedData.estimatedDuration ? parseInt(updatedData.estimatedDuration) : undefined,
+        notes_c: updatedData.notes,
+        completedAt_c: updatedData.completedAt,
+        roomId_c: updatedData.roomId ? parseInt(updatedData.roomId) : undefined
+      };
 
-    this.tasks.push(newTask);
-    return { ...newTask };
-  }
+      // Remove fields with null, undefined, or empty string values
+      Object.keys(updateableFields).forEach(key => {
+        if (updateableFields[key] === null || updateableFields[key] === undefined || updateableFields[key] === '') {
+          delete updateableFields[key];
+        }
+      });
 
-  async update(id, updateData) {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    if (!Number.isInteger(id) || id <= 0) {
-      throw new Error('Invalid task ID');
+      const response = await apperClient.updateRecord('tasks_c', {
+        records: [updateableFields]
+      });
+
+      if (!response.success) {
+        console.error("Error updating task:", response.message);
+        toast.error(response.message);
+        return null;
+      }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success);
+        const failed = response.results.filter(r => !r.success);
+        
+        if (failed.length > 0) {
+          console.error(`Failed to update ${failed.length} tasks: ${JSON.stringify(failed)}`);
+          failed.forEach(record => {
+            record.errors?.forEach(error => toast.error(`${error.fieldLabel}: ${error}`));
+            if (record.message) toast.error(record.message);
+          });
+        }
+        return successful.length > 0 ? successful[0].data : null;
+      }
+    } catch (error) {
+      console.error("Error updating task:", error?.response?.data?.message || error);
+      return null;
     }
-
-    const taskIndex = this.tasks.findIndex(t => t.Id === id);
-    if (taskIndex === -1) {
-      throw new Error(`Task with ID ${id} not found`);
-    }
-
-    if (!updateData || typeof updateData !== 'object') {
-      throw new Error('Invalid update data');
-    }
-
-    const updatedTask = {
-      ...this.tasks[taskIndex],
-      ...updateData,
-      Id: id, // Prevent ID changes
-      updatedAt: new Date().toISOString()
-    };
-
-    // Set completedAt when status changes to completed
-    if (updateData.status === 'completed' && this.tasks[taskIndex].status !== 'completed') {
-      updatedTask.completedAt = new Date().toISOString();
-    }
-
-    // Clear completedAt if status changes from completed
-    if (updateData.status && updateData.status !== 'completed') {
-      updatedTask.completedAt = null;
-    }
-
-    this.tasks[taskIndex] = updatedTask;
-    return { ...updatedTask };
-  }
+  },
 
   async delete(id) {
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    if (!Number.isInteger(id) || id <= 0) {
-      throw new Error('Invalid task ID');
-    }
+    try {
+      const apperClient = getApperClient();
+      const response = await apperClient.deleteRecord('tasks_c', {
+        RecordIds: [id]
+      });
 
-    const taskIndex = this.tasks.findIndex(t => t.Id === id);
-    if (taskIndex === -1) {
-      throw new Error(`Task with ID ${id} not found`);
-    }
+      if (!response.success) {
+        console.error("Error deleting task:", response.message);
+        toast.error(response.message);
+        return false;
+      }
 
-    const deletedTask = { ...this.tasks[taskIndex] };
-    this.tasks.splice(taskIndex, 1);
-    return deletedTask;
-  }
+      if (response.results) {
+        const successful = response.results.filter(r => r.success);
+        const failed = response.results.filter(r => !r.success);
+        
+        if (failed.length > 0) {
+          console.error(`Failed to delete ${failed.length} tasks: ${JSON.stringify(failed)}`);
+          failed.forEach(record => {
+            if (record.message) toast.error(record.message);
+          });
+        }
+        return successful.length > 0;
+      }
+    } catch (error) {
+      console.error("Error deleting task:", error?.response?.data?.message || error);
+      return false;
+    }
+  },
 
   async getByRoomId(roomId) {
-    await new Promise(resolve => setTimeout(resolve, 150));
-    
-    if (!Number.isInteger(roomId) || roomId <= 0) {
-      throw new Error('Invalid room ID');
-    }
+    try {
+      const apperClient = getApperClient();
+      const response = await apperClient.fetchRecords('tasks_c', {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "roomNumber_c"}},
+          {"field": {"Name": "taskType_c"}},
+          {"field": {"Name": "description_c"}},
+          {"field": {"Name": "priority_c"}},
+          {"field": {"Name": "status_c"}},
+          {"field": {"Name": "assignedTo_c"}},
+          {"field": {"Name": "estimatedDuration_c"}},
+          {"field": {"Name": "notes_c"}},
+          {"field": {"Name": "completedAt_c"}},
+          {"field": {"Name": "roomId_c"}}
+        ],
+        where: [{
+          "FieldName": "roomId_c",
+          "Operator": "EqualTo",
+          "Values": [parseInt(roomId)]
+        }]
+      });
 
-    return this.tasks.filter(t => t.roomId === roomId).map(t => ({ ...t }));
-  }
+      if (!response.success) {
+        console.error("Error fetching tasks by room:", response.message);
+        return [];
+      }
+
+      return response.data || [];
+    } catch (error) {
+      console.error("Error fetching tasks by room:", error?.response?.data?.message || error);
+      return [];
+    }
+  },
 
   async getByStatus(status) {
-    await new Promise(resolve => setTimeout(resolve, 150));
-    
-    if (!status || typeof status !== 'string') {
-      throw new Error('Invalid status');
+    try {
+      const apperClient = getApperClient();
+      const response = await apperClient.fetchRecords('tasks_c', {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "roomNumber_c"}},
+          {"field": {"Name": "taskType_c"}},
+          {"field": {"Name": "description_c"}},
+          {"field": {"Name": "priority_c"}},
+          {"field": {"Name": "status_c"}},
+          {"field": {"Name": "assignedTo_c"}},
+          {"field": {"Name": "estimatedDuration_c"}},
+          {"field": {"Name": "notes_c"}},
+          {"field": {"Name": "completedAt_c"}},
+          {"field": {"Name": "roomId_c"}}
+        ],
+        where: [{
+          "FieldName": "status_c",
+          "Operator": "EqualTo",
+          "Values": [status]
+        }]
+      });
+
+      if (!response.success) {
+        console.error("Error fetching tasks by status:", response.message);
+        return [];
+      }
+
+      return response.data || [];
+    } catch (error) {
+      console.error("Error fetching tasks by status:", error?.response?.data?.message || error);
+      return [];
     }
-
-    return this.tasks.filter(t => t.status === status).map(t => ({ ...t }));
   }
-}
+};
 
-export const taskService = new TaskService();
+export { taskService };
+export default taskService;

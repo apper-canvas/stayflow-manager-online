@@ -1,13 +1,13 @@
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
-import Button from "@/components/atoms/Button";
-import StatusBadge from "@/components/molecules/StatusBadge";
+import { toast } from "react-toastify";
+import reservationService from "@/services/api/reservationService";
+import ApperIcon from "@/components/ApperIcon";
 import Loading from "@/components/ui/Loading";
 import ErrorView from "@/components/ui/ErrorView";
 import Empty from "@/components/ui/Empty";
-import ApperIcon from "@/components/ApperIcon";
-import reservationService from "@/services/api/reservationService";
-import { toast } from "react-toastify";
+import StatusBadge from "@/components/molecules/StatusBadge";
+import Button from "@/components/atoms/Button";
 
 const ReservationTable = ({ statusFilter, searchQuery }) => {
   const [reservations, setReservations] = useState([]);
@@ -31,23 +31,27 @@ const ReservationTable = ({ statusFilter, searchQuery }) => {
     loadReservations();
   }, []);
 
-  const handleCheckIn = async (reservation) => {
+const handleCheckIn = async (reservation) => {
     try {
-      const updatedReservation = { ...reservation, status: "checkedin" };
-      await reservationService.update(reservation.Id, updatedReservation);
-      setReservations(reservations.map(r => r.Id === reservation.Id ? updatedReservation : r));
-      toast.success(`Guest ${reservation.guestName} checked in successfully`);
+      const updatedData = { status: "checkedin" };
+      const result = await reservationService.update(reservation.Id, updatedData);
+      if (result) {
+        setReservations(reservations.map(r => r.Id === reservation.Id ? { ...r, ...result } : r));
+        toast.success(`Guest ${reservation.guestName_c || reservation.guestName} checked in successfully`);
+      }
     } catch (err) {
       toast.error("Failed to check in guest");
     }
   };
 
-  const handleCheckOut = async (reservation) => {
+const handleCheckOut = async (reservation) => {
     try {
-      const updatedReservation = { ...reservation, status: "checkedout" };
-      await reservationService.update(reservation.Id, updatedReservation);
-      setReservations(reservations.map(r => r.Id === reservation.Id ? updatedReservation : r));
-      toast.success(`Guest ${reservation.guestName} checked out successfully`);
+      const updatedData = { status: "checkedout" };
+      const result = await reservationService.update(reservation.Id, updatedData);
+      if (result) {
+        setReservations(reservations.map(r => r.Id === reservation.Id ? { ...r, ...result } : r));
+        toast.success(`Guest ${reservation.guestName_c || reservation.guestName} checked out successfully`);
+      }
     } catch (err) {
       toast.error("Failed to check out guest");
     }
@@ -59,12 +63,12 @@ const ReservationTable = ({ statusFilter, searchQuery }) => {
   // Filter reservations
   let filteredReservations = reservations;
   if (statusFilter !== "all") {
-    filteredReservations = filteredReservations.filter(r => r.status === statusFilter);
+filteredReservations = filteredReservations.filter(r => (r.status_c || r.status) === statusFilter);
   }
   if (searchQuery) {
     filteredReservations = filteredReservations.filter(r => 
-      r.guestName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.roomNumber.toLowerCase().includes(searchQuery.toLowerCase())
+      (r.guestName_c || r.guestName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (r.roomNumber_c || r.roomNumber || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
   }
 
@@ -113,39 +117,46 @@ const ReservationTable = ({ statusFilter, searchQuery }) => {
                       <ApperIcon name="User" className="h-4 w-4 text-primary" />
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {reservation.guestName}
+<div className="text-sm font-medium text-gray-900">
+                        {reservation.guestName_c || reservation.guestName}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {reservation.adults} adults, {reservation.children} children
+                        {reservation.adults_c || reservation.adults || 0} adults, {reservation.children_c || reservation.children || 0} children
+                      </div>
+                    </div>
+                  </div>
+</td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center">
+                    <div className="bg-blue-100 rounded-full p-2 mr-3">
+                      <ApperIcon name="Home" className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">
+                        Room {reservation.roomNumber_c || reservation.roomNumber}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {reservation.roomType_c || reservation.roomType || 'Standard'}
                       </div>
                     </div>
                   </div>
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {(reservation?.checkInDate_c || reservation?.checkIn) && !isNaN(new Date(reservation.checkInDate_c || reservation.checkIn).getTime()) 
+                    ? format(new Date(reservation.checkInDate_c || reservation.checkIn), "MMM dd, yyyy")
+                    : "N/A"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {(reservation?.checkOutDate_c || reservation?.checkOut) && !isNaN(new Date(reservation.checkOutDate_c || reservation.checkOut).getTime()) 
+                    ? format(new Date(reservation.checkOutDate_c || reservation.checkOut), "MMM dd, yyyy")
+                    : "N/A"}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
-                    Room {reservation.roomNumber}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {reservation.roomType}
-                  </div>
-                </td>
-<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {reservation?.checkIn && !isNaN(new Date(reservation.checkIn).getTime()) 
-                    ? format(new Date(reservation.checkIn), "MMM dd, yyyy")
-                    : "N/A"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {reservation?.checkOut && !isNaN(new Date(reservation.checkOut).getTime()) 
-                    ? format(new Date(reservation.checkOut), "MMM dd, yyyy")
-                    : "N/A"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <StatusBadge status={reservation.status} />
+                  <StatusBadge status={reservation.status_c || reservation.status} />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div className="flex gap-2">
-                    {reservation.status === "confirmed" && (
+{(reservation.status_c || reservation.status) === "confirmed" && (
                       <Button
                         size="sm"
                         onClick={() => handleCheckIn(reservation)}
@@ -154,7 +165,7 @@ const ReservationTable = ({ statusFilter, searchQuery }) => {
                         Check In
                       </Button>
                     )}
-                    {reservation.status === "checkedin" && (
+{(reservation.status_c || reservation.status) === "checkedin" && (
                       <Button
                         size="sm"
                         variant="secondary"

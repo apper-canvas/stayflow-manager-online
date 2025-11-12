@@ -56,7 +56,7 @@ const NewInvoice = () => {
         ]);
         setGuests(guestsData);
         setRooms(roomsData);
-        setReservations(reservationsData.filter(r => r.status === 'checked_out' || r.status === 'confirmed'));
+setReservations(reservationsData.filter(r => r.status_c === 'checkedout' || r.status_c === 'confirmed'));
       } catch (error) {
         toast.error('Failed to load form data');
       } finally {
@@ -83,21 +83,21 @@ const NewInvoice = () => {
 
   // Auto-populate fields when reservation is selected
 useEffect(() => {
-    if (formData.reservationId) {
+if (formData.reservationId) {
       const selectedReservation = reservations.find(r => r.Id === parseInt(formData.reservationId));
       if (selectedReservation) {
-        const checkIn = new Date(selectedReservation.checkInDate);
-        const checkOut = new Date(selectedReservation.checkOutDate);
+        const checkIn = new Date(selectedReservation.checkInDate_c);
+        const checkOut = new Date(selectedReservation.checkOutDate_c);
         const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-        const room = rooms.find(r => r.Id === selectedReservation.roomId);
-        const roomCharges = room ? nights * room.pricePerNight : 0;
+        const room = rooms.find(r => r.Id === (selectedReservation.roomId_c?.Id || selectedReservation.roomId_c));
+        const roomCharges = room ? nights * (room.pricePerNight || room.baseRate) : 0;
 
         setFormData(prev => ({
           ...prev,
-          guestId: selectedReservation.guestId ? selectedReservation.guestId.toString() : "",
-          roomId: selectedReservation.roomId ? selectedReservation.roomId.toString() : "",
-          billingPeriodStart: selectedReservation.checkInDate || "",
-          billingPeriodEnd: selectedReservation.checkOutDate || "",
+          guestId: selectedReservation.guestId_c?.Id ? selectedReservation.guestId_c.Id.toString() : "",
+          roomId: selectedReservation.roomId_c?.Id ? selectedReservation.roomId_c.Id.toString() : "",
+          billingPeriodStart: selectedReservation.checkInDate_c || "",
+          billingPeriodEnd: selectedReservation.checkOutDate_c || "",
           roomCharges: roomCharges
         }));
       }
@@ -251,20 +251,16 @@ useEffect(() => {
 {reservations.map((reservation) => {
                   // Handle both data patterns: guestId lookup or direct guestName
                   let guestName = 'Unknown Guest';
-                  if (reservation.guestId) {
-                    const guestId = parseInt(reservation.guestId);
-                    const guest = guests.find(g => g.Id === guestId);
-                    if (guest && guest.firstName && guest.lastName) {
-                      guestName = `${guest.firstName} ${guest.lastName}`;
-                    }
-                  } else if (reservation.guestName) {
-                    guestName = reservation.guestName;
+                  if (reservation.guestId_c?.Id) {
+                    guestName = reservation.guestId_c.Name;
+                  } else if (reservation.guestName_c) {
+                    guestName = reservation.guestName_c;
                   }
                   
-                  const room = reservation.roomId ? rooms.find(r => r.Id === parseInt(reservation.roomId)) : null;
+                  const roomNumber = reservation.roomId_c?.Name || reservation.roomNumber_c || 'Unknown';
                   return (
                     <option key={reservation.Id} value={reservation.Id}>
-                      {guestName} - Room {room?.number || reservation.roomNumber || 'Unknown'} ({reservation.checkIn || 'N/A'} to {reservation.checkOut || 'N/A'})
+                      {guestName} - Room {roomNumber} ({reservation.checkInDate_c || 'N/A'} to {reservation.checkOutDate_c || 'N/A'})
                     </option>
                   );
                 })}

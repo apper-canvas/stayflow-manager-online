@@ -48,12 +48,12 @@ const Dashboard = () => {
       // Get today's arrivals (reservations with check-in today)
       const today = new Date().toISOString().split("T")[0];
 const arrivals = reservations.filter(r => 
-        r.checkIn && r.checkIn.startsWith(today) && r.status === "confirmed"
+        (r.checkInDate_c || r.checkIn) && (r.checkInDate_c || r.checkIn).startsWith(today) && (r.status_c || r.status) === "confirmed"
       ).slice(0, 5);
       setTodayArrivals(arrivals);
 
       // Get pending housekeeping tasks
-      const pending = tasks.filter(t => t.status === "todo" || t.status === "inprogress").slice(0, 5);
+const pending = tasks.filter(t => (t.status_c || t.status) === "todo" || (t.status_c || t.status) === "inprogress").slice(0, 5);
       setPendingTasks(pending);
 
     } catch (err) {
@@ -156,14 +156,14 @@ const arrivals = reservations.filter(r =>
                           <ApperIcon name="User" className="h-4 w-4 text-primary" />
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{arrival.guestName}</p>
-                          <p className="text-sm text-gray-500">Room {arrival.roomNumber}</p>
+<p className="font-medium text-gray-900">{arrival.guestName_c || arrival.guestName}</p>
+                          <p className="text-sm text-gray-500">Room {arrival.roomNumber_c || arrival.roomNumber}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <StatusBadge status={arrival.status} />
+                        <StatusBadge status={arrival.status_c || arrival.status} />
                         <p className="text-sm text-gray-500 mt-1">
-                          {arrival.adults + arrival.children} guests
+                          {(arrival.adults_c || arrival.adults || 0) + (arrival.children_c || arrival.children || 0)} guests
                         </p>
                       </div>
                     </div>
@@ -221,11 +221,11 @@ const arrivals = reservations.filter(r =>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {pendingTasks.map((task) => (
+{pendingTasks.map((task) => (
                     <div key={task.Id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div>
-                        <p className="font-medium text-gray-900">{task.taskType}</p>
-                        <p className="text-sm text-gray-500">Room {task.roomNumber}</p>
+                        <p className="font-medium text-gray-900">{task.taskType_c || task.taskType}</p>
+                        <p className="text-sm text-gray-500">Room {task.roomNumber_c || task.roomNumber}</p>
                       </div>
                       <StatusBadge status={task.status} />
                     </div>

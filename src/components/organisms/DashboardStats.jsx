@@ -40,17 +40,17 @@ const DashboardStats = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <StatCard
+<StatCard
         title="Total Rooms"
-        value={stats.totalRooms}
+        value={stats.totalRooms || 0}
         icon="Building"
         color="primary"
-        change={`${stats.occupancyRate}% occupied`}
+        change={`${stats.occupancyRate || 0}% occupied`}
         gradient
       />
       <StatCard
         title="Available"
-        value={stats.availableRooms}
+        value={stats.availableRooms || 0}
         icon="CheckCircle"
         color="success"
         change="Ready for guests"
@@ -58,7 +58,7 @@ const DashboardStats = () => {
       />
       <StatCard
         title="Occupied"
-        value={stats.occupiedRooms}
+        value={stats.occupiedRooms || 0}
         icon="Users"
         color="info"
         change="Currently checked in"
@@ -66,10 +66,10 @@ const DashboardStats = () => {
       />
       <StatCard
         title="Revenue Today"
-        value={`$${stats.todayRevenue?.toLocaleString() || 0}`}
+        value={`$${(stats.todayRevenue || 0).toLocaleString()}`}
         icon="DollarSign"
         color="primary"
-        change={`${stats.checkInsToday} check-ins today`}
+        change={`${stats.checkInsToday || 0} check-ins today`}
         gradient
       />
     </div>

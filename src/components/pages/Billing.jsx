@@ -39,12 +39,14 @@ const Billing = () => {
     loadInvoices();
   }, []);
 
-  const handlePaymentProcess = async (invoice) => {
+const handlePaymentProcess = async (invoice) => {
     try {
-      const updatedInvoice = { ...invoice, paymentStatus: "paid" };
-      await invoiceService.update(invoice.Id, updatedInvoice);
-      setInvoices(invoices.map(inv => inv.Id === invoice.Id ? updatedInvoice : inv));
-      toast.success("Payment processed successfully");
+      const updatedInvoice = { paymentStatus: "paid" };
+      const result = await invoiceService.update(invoice.Id, updatedInvoice);
+      if (result) {
+        setInvoices(invoices.map(inv => inv.Id === invoice.Id ? { ...inv, ...result } : inv));
+        toast.success("Payment processed successfully");
+      }
     } catch (err) {
       toast.error("Failed to process payment");
     }
@@ -55,12 +57,12 @@ const Billing = () => {
 
   // Filter invoices
   let filteredInvoices = invoices;
-  if (statusFilter !== "all") {
-    filteredInvoices = filteredInvoices.filter(inv => inv.paymentStatus === statusFilter);
+if (statusFilter !== "all") {
+    filteredInvoices = filteredInvoices.filter(inv => (inv.paymentStatus_c || inv.paymentStatus) === statusFilter);
   }
   if (searchQuery) {
-    filteredInvoices = filteredInvoices.filter(inv => 
-      inv.guestName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+filteredInvoices = filteredInvoices.filter(inv => 
+      (inv.guestName_c || inv.guestName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       inv.Id.toString().includes(searchQuery)
     );
   }
@@ -194,35 +196,33 @@ const Billing = () => {
                         }`}
                         onClick={() => setSelectedInvoice(invoice)}
                       >
-                        <td className="px-6 py-4 whitespace-nowrap">
+<td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
                             INV-{invoice.Id.toString().padStart(4, '0')}
                           </div>
-<div className="text-sm text-gray-500">
-                            {invoice?.issuedAt && !isNaN(new Date(invoice.issuedAt).getTime()) 
-                              ? format(new Date(invoice.issuedAt), "MMM dd, yyyy")
+                          <div className="text-sm text-gray-500">
+                            {(invoice?.issuedAt_c || invoice?.issuedAt) && !isNaN(new Date(invoice.issuedAt_c || invoice.issuedAt).getTime()) 
+                              ? format(new Date(invoice.issuedAt_c || invoice.issuedAt), "MMM dd, yyyy")
                               : "Invalid date"}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
-                            {invoice.guestName}
+                            {invoice.guestName_c || invoice.guestName}
                           </div>
                           <div className="text-sm text-gray-500">
-                            Room {invoice.roomNumber}
+                            Room {invoice.roomNumber_c || invoice.roomNumber}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            ${invoice.totalAmount.toLocaleString()}
-                          </div>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          ${(invoice.totalAmount_c || invoice.totalAmount || 0).toLocaleString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <StatusBadge status={invoice.paymentStatus} />
+<td className="px-6 py-4 whitespace-nowrap">
+                          <StatusBadge status={invoice.paymentStatus_c || invoice.paymentStatus} />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex gap-2">
-                            {invoice.paymentStatus === "unpaid" && (
+                          <div className="flex items-center gap-2">
+                            {(invoice.paymentStatus_c || invoice.paymentStatus) === "unpaid" && (
                               <Button
                                 size="sm"
                                 onClick={(e) => {
@@ -265,63 +265,67 @@ const Billing = () => {
                 {/* Invoice Header */}
                 <div>
                   <div className="text-lg font-semibold text-gray-900">
-                    INV-{selectedInvoice.Id.toString().padStart(4, '0')}
+INV-{selectedInvoice.Id.toString().padStart(4, '0')}
 </div>
                 <div className="text-sm text-gray-500">
-                  Issued: {selectedInvoice?.issuedAt && !isNaN(new Date(selectedInvoice.issuedAt).getTime()) 
-                    ? format(new Date(selectedInvoice.issuedAt), "MMM dd, yyyy")
+                  Issued: {(selectedInvoice?.issuedAt_c || selectedInvoice?.issuedAt) && !isNaN(new Date(selectedInvoice.issuedAt_c || selectedInvoice.issuedAt).getTime()) 
+                    ? format(new Date(selectedInvoice.issuedAt_c || selectedInvoice.issuedAt), "MMM dd, yyyy")
                     : "Invalid date"}
                 </div>
-                  <StatusBadge status={selectedInvoice.paymentStatus} className="mt-2" />
+                  <StatusBadge status={selectedInvoice.paymentStatus_c || selectedInvoice.paymentStatus} className="mt-2" />
                 </div>
 
                 {/* Guest Info */}
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-2">Guest</h4>
-                  <p className="text-sm text-gray-600">{selectedInvoice.guestName}</p>
-                  <p className="text-sm text-gray-600">Room {selectedInvoice.roomNumber}</p>
+<p className="text-sm text-gray-600">{selectedInvoice.guestName_c || selectedInvoice.guestName}</p>
+                  <p className="text-sm text-gray-600">Room {selectedInvoice.roomNumber_c || selectedInvoice.roomNumber}</p>
                 </div>
 
                 {/* Charges Breakdown */}
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-3">Charges</h4>
-                  <div className="space-y-2 text-sm">
+<div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Room Charges</span>
-                      <span>${selectedInvoice.roomCharges.toLocaleString()}</span>
+                      <span>${(selectedInvoice.roomCharges_c || selectedInvoice.roomCharges || 0).toLocaleString()}</span>
                     </div>
-                    {selectedInvoice.serviceCharges.map((service, index) => (
-                      <div key={index} className="flex justify-between">
-                        <span className="text-gray-600">{service.name}</span>
-                        <span>${service.amount.toLocaleString()}</span>
-                      </div>
-                    ))}
+                    {(() => {
+                      const serviceCharges = selectedInvoice.serviceCharges_c || selectedInvoice.serviceCharges || [];
+                      const services = typeof serviceCharges === 'string' ? JSON.parse(serviceCharges) : serviceCharges;
+                      return Array.isArray(services) ? services.map((service, index) => (
+                        <div key={index} className="flex justify-between">
+                          <span className="text-gray-600">{service.name}</span>
+                          <span>${service.amount.toLocaleString()}</span>
+                        </div>
+                      )) : null;
+                    })()}
                     <div className="flex justify-between border-t pt-2">
                       <span className="text-gray-600">Subtotal</span>
-                      <span>${(selectedInvoice.totalAmount - selectedInvoice.tax).toLocaleString()}</span>
+                      <span>${((selectedInvoice.totalAmount_c || selectedInvoice.totalAmount || 0) - (selectedInvoice.tax_c || selectedInvoice.tax || 0)).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Tax</span>
-                      <span>${selectedInvoice.tax.toLocaleString()}</span>
+                      <span>${(selectedInvoice.tax_c || selectedInvoice.tax || 0).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between font-semibold text-lg border-t pt-2">
                       <span>Total</span>
-                      <span>${selectedInvoice.totalAmount.toLocaleString()}</span>
+                      <span>${(selectedInvoice.totalAmount_c || selectedInvoice.totalAmount || 0).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Payment Info */}
-                {selectedInvoice.paymentStatus === "paid" && (
+{(selectedInvoice.paymentStatus_c || selectedInvoice.paymentStatus) === "paid" && (
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-2">Payment</h4>
-                    <p className="text-sm text-gray-600">Method: {selectedInvoice.paymentMethod}</p>
+                    <p className="text-sm text-gray-600">Method: {selectedInvoice.paymentMethod_c || selectedInvoice.paymentMethod}</p>
                   </div>
                 )}
 
                 {/* Actions */}
                 <div className="space-y-2">
-                  {selectedInvoice.paymentStatus === "unpaid" && (
+{(selectedInvoice.paymentStatus_c || selectedInvoice.paymentStatus) === "unpaid" && (
                     <Button 
                       className="w-full" 
                       onClick={() => handlePaymentProcess(selectedInvoice)}

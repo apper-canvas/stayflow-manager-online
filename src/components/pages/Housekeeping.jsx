@@ -99,10 +99,10 @@ const Housekeeping = () => {
         <CardContent className="p-4">
           <div className="flex items-start justify-between mb-3">
             <div>
-              <h3 className="font-semibold text-gray-900">{task.taskType}</h3>
-              <p className="text-sm text-gray-600">Room {task.roomNumber}</p>
-              {task.assignedTo && (
-                <p className="text-sm text-gray-500">Assigned to: {task.assignedTo}</p>
+<h3 className="font-semibold text-gray-900">{task.taskType || task.taskType_c}</h3>
+              <p className="text-sm text-gray-600">Room {task.roomNumber || task.roomNumber_c}</p>
+              {(task.assignedTo || task.assignedTo_c) && (
+                <p className="text-sm text-gray-500">Assigned to: {task.assignedTo || task.assignedTo_c}</p>
               )}
             </div>
             <div className="flex gap-2">
@@ -118,16 +118,16 @@ const Housekeeping = () => {
             </div>
           </div>
 
-          {task.notes && (
-            <p className="text-sm text-gray-600 mb-3">{task.notes}</p>
+{(task.notes || task.notes_c) && (
+            <p className="text-sm text-gray-600 mb-3">{task.notes || task.notes_c}</p>
           )}
 
 <div className="text-xs text-gray-500 space-y-1">
-            <span>Scheduled: {task?.scheduledFor && !isNaN(new Date(task.scheduledFor).getTime()) 
-              ? format(new Date(task.scheduledFor), "MMM dd, HH:mm") 
+            <span>Scheduled: {(task?.scheduledFor || task?.scheduledFor_c) && !isNaN(new Date(task.scheduledFor || task.scheduledFor_c).getTime()) 
+              ? format(new Date(task.scheduledFor || task.scheduledFor_c), "MMM dd, HH:mm") 
               : "Not scheduled"}</span>
-            {task.completedAt && !isNaN(new Date(task.completedAt).getTime()) && (
-              <span>Completed: {format(new Date(task.completedAt), "MMM dd, HH:mm")}</span>
+            {(task.completedAt || task.completedAt_c) && !isNaN(new Date(task.completedAt || task.completedAt_c).getTime()) && (
+              <span>Completed: {format(new Date(task.completedAt || task.completedAt_c), "MMM dd, HH:mm")}</span>
             )}
           </div>
 

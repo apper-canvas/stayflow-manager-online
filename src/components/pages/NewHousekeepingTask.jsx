@@ -9,7 +9,7 @@ import FormField from '@/components/molecules/FormField';
 import ApperIcon from '@/components/ApperIcon';
 import Loading from '@/components/ui/Loading';
 import ErrorView from '@/components/ui/ErrorView';
-import { taskService } from '@/services/api/taskService';
+import taskService from '@/services/api/taskService';
 import roomService from '@/services/api/roomService';
 
 export default function NewHousekeepingTask() {
@@ -104,10 +104,13 @@ export default function NewHousekeepingTask() {
       setSubmitting(true);
       
       const taskData = {
-        ...formData,
+title: formData.title,
+        description: formData.description,
+        priority: formData.priority,
+        status: formData.status,
         estimatedDuration: formData.estimatedDuration ? parseInt(formData.estimatedDuration) : null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        notes: formData.notes,
+        roomId: formData.roomId ? parseInt(formData.roomId) : null
       };
 
       await taskService.create(taskData);
