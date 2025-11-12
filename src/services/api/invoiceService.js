@@ -217,7 +217,4 @@ const invoiceService = {
     }
   }
 };
-
-export default invoiceService;
-
 export default invoiceService;

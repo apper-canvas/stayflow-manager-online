@@ -217,7 +217,4 @@ const reservationService = {
     }
   }
 };
-
-export default reservationService;
-
 export default reservationService;
