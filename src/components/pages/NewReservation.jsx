@@ -5,6 +5,7 @@ import ApperIcon from "@/components/ApperIcon";
 import Button from "@/components/atoms/Button";
 import Input from "@/components/atoms/Input";
 import Select from "@/components/atoms/Select";
+import SearchableSelect from "@/components/atoms/SearchableSelect";
 import { Card } from "@/components/atoms/Card";
 import reservationService from "@/services/api/reservationService";
 import guestService from "@/services/api/guestService";
@@ -183,40 +184,64 @@ await reservationService.create(reservationData);
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Guest & Room Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+<label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Guest *
               </label>
-              <Select
+              <SearchableSelect
                 value={formData.guestId}
                 onChange={(e) => handleInputChange("guestId", e.target.value)}
+                options={[
+                  { value: '', label: 'Choose a guest...' },
+                  ...guests.map((guest) => ({
+                    value: guest.Id,
+                    label: `${guest.firstName} ${guest.lastName} - ${guest.email}`,
+                    guest: guest
+                  }))
+                ]}
+                placeholder="Search guests by name or email..."
+                filterOption={(option, searchTerm) => {
+                  if (!option.guest) return true; // Keep the "Choose a guest..." option
+                  const searchLower = searchTerm.toLowerCase();
+                  const guest = option.guest;
+                  return (
+                    guest.firstName?.toLowerCase().includes(searchLower) ||
+                    guest.lastName?.toLowerCase().includes(searchLower) ||
+                    guest.email?.toLowerCase().includes(searchLower)
+                  );
+                }}
                 className={formErrors.guestId ? "border-red-500" : ""}
-              >
-                <option value="">Choose a guest...</option>
-                {guests.map((guest) => (
-                  <option key={guest.Id} value={guest.Id}>
-                    {guest.firstName} {guest.lastName} - {guest.email}
-                  </option>
-                ))}
-              </Select>
+              />
               {formErrors.guestId && <p className="text-red-500 text-sm mt-1">{formErrors.guestId}</p>}
             </div>
 
-            <div>
+<div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Room *
               </label>
-              <Select
+              <SearchableSelect
                 value={formData.roomId}
                 onChange={(e) => handleInputChange("roomId", e.target.value)}
+                options={[
+                  { value: '', label: 'Choose a room...' },
+                  ...availableRooms.map((room) => ({
+                    value: room.Id,
+                    label: `Room ${room.number} - ${room.type} ($${room.pricePerNight}/night)`,
+                    room: room
+                  }))
+                ]}
+                placeholder="Search rooms by number, type, or price..."
+                filterOption={(option, searchTerm) => {
+                  if (!option.room) return true; // Keep the "Choose a room..." option
+                  const searchLower = searchTerm.toLowerCase();
+                  const room = option.room;
+                  return (
+                    room.number?.toString().toLowerCase().includes(searchLower) ||
+                    room.type?.toLowerCase().includes(searchLower) ||
+                    room.pricePerNight?.toString().includes(searchTerm)
+                  );
+                }}
                 className={formErrors.roomId ? "border-red-500" : ""}
-              >
-                <option value="">Choose a room...</option>
-                {availableRooms.map((room) => (
-                  <option key={room.Id} value={room.Id}>
-                    Room {room.number} - {room.type} (${room.pricePerNight}/night)
-                  </option>
-                ))}
-              </Select>
+              />
               {formErrors.roomId && <p className="text-red-500 text-sm mt-1">{formErrors.roomId}</p>}
             </div>
           </div>
