@@ -460,7 +460,7 @@ const renderAllergies = () => (
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-modal w-full max-w-4xl max-h-[90vh] overflow-hidden">
+<div className="bg-white rounded-xl shadow-modal w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="flex flex-col h-full">
           {/* Header */}
 <div className="p-6 border-b border-gray-200">
