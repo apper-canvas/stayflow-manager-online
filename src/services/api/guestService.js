@@ -1,6 +1,36 @@
-import { getApperClient } from "@/services/apperClient";
 import { toast } from "react-toastify";
 import React from "react";
+import { getApperClient } from "@/services/apperClient";
+
+// Delay function for mock service simulation
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Safe JSON parsing utility function
+const safeJsonParse = (value, fallback) => {
+  if (!value) return fallback;
+  
+  if (typeof value === 'object') return value;
+  
+  if (typeof value === 'string') {
+    try {
+      // Check if it's a valid JSON string
+      const trimmed = value.trim();
+      if (!trimmed) return fallback;
+      
+      // Must start with { or [ for valid JSON objects/arrays
+      if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) {
+        return fallback;
+      }
+      
+      return JSON.parse(trimmed);
+    } catch (error) {
+      console.warn('Invalid JSON data, using fallback:', error.message);
+      return fallback;
+    }
+  }
+  
+return fallback;
+};
 
 const guestService = {
   async getAll() {
@@ -44,11 +74,11 @@ const guestService = {
         idType: guest.idType_c || '',
         idNumber: guest.idNumber_c || '',
         vipStatus: guest.vipStatus_c || false,
-        address: guest.address_c ? (typeof guest.address_c === 'string' ? JSON.parse(guest.address_c) : guest.address_c) : {},
-        preferences: guest.preferences_c ? (typeof guest.preferences_c === 'string' ? guest.preferences_c.split(',') : guest.preferences_c) : [],
-        allergies: guest.allergies_c ? (typeof guest.allergies_c === 'string' ? guest.allergies_c.split('\n') : guest.allergies_c) : [],
+address: safeJsonParse(guest.address_c, {}),
+        preferences: guest.preferences_c?.split(',') || [],
+        allergies: guest.allergies_c || '',
         stayNotes: guest.stayNotes_c || '',
-        stayHistory: guest.stayHistory_c ? (typeof guest.stayHistory_c === 'string' ? JSON.parse(guest.stayHistory_c) : guest.stayHistory_c) : []
+        stayHistory: safeJsonParse(guest.stayHistory_c, [])
       }));
     } catch (error) {
       console.error("Error fetching guests:", error?.response?.data?.message || error);
@@ -91,11 +121,11 @@ const guestService = {
         idType: guest.idType_c || '',
         idNumber: guest.idNumber_c || '',
         vipStatus: guest.vipStatus_c || false,
-        address: guest.address_c ? (typeof guest.address_c === 'string' ? JSON.parse(guest.address_c) : guest.address_c) : {},
-        preferences: guest.preferences_c ? (typeof guest.preferences_c === 'string' ? guest.preferences_c.split(',') : guest.preferences_c) : [],
-        allergies: guest.allergies_c ? (typeof guest.allergies_c === 'string' ? guest.allergies_c.split('\n') : guest.allergies_c) : [],
+address: safeJsonParse(guest.address_c, {}),
+        preferences: guest.preferences_c?.split(',') || [],
+        allergies: guest.allergies_c || '',
         stayNotes: guest.stayNotes_c || '',
-        stayHistory: guest.stayHistory_c ? (typeof guest.stayHistory_c === 'string' ? JSON.parse(guest.stayHistory_c) : guest.stayHistory_c) : []
+        stayHistory: safeJsonParse(guest.stayHistory_c, [])
       };
     } catch (error) {
       console.error(`Error fetching guest ${id}:`, error?.response?.data?.message || error);
