@@ -9,14 +9,14 @@ import ApperIcon from "@/components/ApperIcon";
 const GuestProfileEditor = ({ guest, onSave, onClose }) => {
 const [activeTab, setActiveTab] = useState("basic");
   const [formData, setFormData] = useState({
-    ...guest,
+    ...(guest || {}),
     preferences: guest?.preferences || [],
     allergies: guest?.allergies || [],
     stayNotes: guest?.stayNotes || "",
     address: guest?.address || {}
   });
   
-  const isCreating = !guest.Id;
+  const isCreating = !guest?.Id;
   const [errors, setErrors] = useState({});
 
   const tabs = [
