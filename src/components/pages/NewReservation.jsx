@@ -1,22 +1,28 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import ApperIcon from "@/components/ApperIcon";
-import Button from "@/components/atoms/Button";
-import Input from "@/components/atoms/Input";
-import Select from "@/components/atoms/Select";
-import SearchableSelect from "@/components/atoms/SearchableSelect";
 import { Card } from "@/components/atoms/Card";
 import reservationService from "@/services/api/reservationService";
 import guestService from "@/services/api/guestService";
 import roomService from "@/services/api/roomService";
+import ApperIcon from "@/components/ApperIcon";
+import Loading from "@/components/ui/Loading";
+import Guests from "@/components/pages/Guests";
+import Reservations from "@/components/pages/Reservations";
+import GuestProfileEditor from "@/components/organisms/GuestProfileEditor";
+import SearchableSelect from "@/components/atoms/SearchableSelect";
+import Input from "@/components/atoms/Input";
+import Button from "@/components/atoms/Button";
+import Select from "@/components/atoms/Select";
 
 const NewReservation = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+const [loading, setLoading] = useState(false);
   const [guests, setGuests] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [availableRooms, setAvailableRooms] = useState([]);
+  const [showGuestModal, setShowGuestModal] = useState(false);
+  const [guestModalLoading, setGuestModalLoading] = useState(false);
   
   const [formData, setFormData] = useState({
     guestId: "",
@@ -110,11 +116,42 @@ useEffect(() => {
     return Object.keys(errors).length === 0;
   };
 
-  const handleInputChange = (field, value) => {
+const handleInputChange = (field, value) => {
+    // Handle 'New Guest' option
+    if (field === "guestId" && value === "new-guest") {
+      setShowGuestModal(true);
+      return;
+    }
+    
     setFormData(prev => ({ ...prev, [field]: value }));
     if (formErrors[field]) {
       setFormErrors(prev => ({ ...prev, [field]: "" }));
     }
+  };
+
+  const handleNewGuestSave = async (newGuestData) => {
+    try {
+      setGuestModalLoading(true);
+      const createdGuest = await guestService.create(newGuestData);
+      
+      // Add the new guest to the guests list
+      setGuests(prev => [...prev, createdGuest]);
+      
+      // Select the new guest in the form
+      setFormData(prev => ({ ...prev, guestId: createdGuest.Id }));
+      
+      // Close the modal
+      setShowGuestModal(false);
+      toast.success('Guest created and selected successfully');
+    } catch (error) {
+      toast.error('Failed to create guest');
+    } finally {
+      setGuestModalLoading(false);
+    }
+  };
+
+  const handleGuestModalClose = () => {
+    setShowGuestModal(false);
   };
 
   const handleSubmit = async (e) => {
@@ -187,20 +224,22 @@ await reservationService.create(reservationData);
 <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Guest *
               </label>
-              <SearchableSelect
+<SearchableSelect
                 value={formData.guestId}
                 onChange={(e) => handleInputChange("guestId", e.target.value)}
                 options={[
                   { value: '', label: 'Choose a guest...' },
+                  { value: 'new-guest', label: '+ New Guest', isNewGuestOption: true },
                   ...guests.map((guest) => ({
                     value: guest.Id,
                     label: `${guest.firstName} ${guest.lastName} - ${guest.email}`,
                     guest: guest
                   }))
                 ]}
-                placeholder="Search guests by name or email..."
+placeholder="Search guests by name or email..."
                 filterOption={(option, searchTerm) => {
-                  if (!option.guest) return true; // Keep the "Choose a guest..." option
+                  if (!option.guest && !option.isNewGuestOption) return true; // Keep system options
+                  if (option.isNewGuestOption) return true; // Always show "New Guest" option
                   const searchLower = searchTerm.toLowerCase();
                   const guest = option.guest;
                   return (
@@ -396,7 +435,35 @@ await reservationService.create(reservationData);
             )}
           </Button>
         </div>
-      </form>
+</form>
+
+      {/* New Guest Modal */}
+      {showGuestModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-modal max-w-4xl max-h-[90vh] overflow-y-auto m-4 w-full">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-gray-800">Create New Guest</h2>
+                <button
+                  onClick={handleGuestModalClose}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  disabled={guestModalLoading}
+                >
+                  <ApperIcon name="X" size={20} className="text-gray-500" />
+                </button>
+              </div>
+            </div>
+            <div className="p-6">
+              <GuestProfileEditor
+                guest={null}
+                onSave={handleNewGuestSave}
+                onClose={handleGuestModalClose}
+                loading={guestModalLoading}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
