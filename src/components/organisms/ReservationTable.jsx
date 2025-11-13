@@ -1,18 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
+import EditReservationModal from "@/components/organisms/EditReservationModal";
 import reservationService from "@/services/api/reservationService";
 import ApperIcon from "@/components/ApperIcon";
-import Loading from "@/components/ui/Loading";
-import ErrorView from "@/components/ui/ErrorView";
-import Empty from "@/components/ui/Empty";
 import StatusBadge from "@/components/molecules/StatusBadge";
+import Loading from "@/components/ui/Loading";
+import Empty from "@/components/ui/Empty";
+import ErrorView from "@/components/ui/ErrorView";
+import Select from "@/components/atoms/Select";
 import Button from "@/components/atoms/Button";
 
 const ReservationTable = ({ statusFilter, searchQuery }) => {
-  const [reservations, setReservations] = useState([]);
+const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedReservation, setSelectedReservation] = useState(null);
 
   const loadReservations = async () => {
     try {
@@ -31,7 +35,19 @@ const ReservationTable = ({ statusFilter, searchQuery }) => {
     loadReservations();
   }, []);
 
-const handleCheckIn = async (reservation) => {
+const handleStatusChange = async (reservation, newStatus) => {
+    try {
+      const result = await reservationService.update(reservation.Id, { status: newStatus });
+      if (result) {
+        setReservations(reservations.map(r => r.Id === reservation.Id ? { ...r, status_c: newStatus } : r));
+        toast.success(`Reservation status updated to ${newStatus}`);
+      }
+    } catch (err) {
+      toast.error("Failed to update reservation status");
+    }
+  };
+
+  const handleCheckIn = async (reservation) => {
     try {
       const updatedData = { status: "checkedin" };
       const result = await reservationService.update(reservation.Id, updatedData);
@@ -44,7 +60,7 @@ const handleCheckIn = async (reservation) => {
     }
   };
 
-const handleCheckOut = async (reservation) => {
+  const handleCheckOut = async (reservation) => {
     try {
       const updatedData = { status: "checkedout" };
       const result = await reservationService.update(reservation.Id, updatedData);
@@ -55,6 +71,20 @@ const handleCheckOut = async (reservation) => {
     } catch (err) {
       toast.error("Failed to check out guest");
     }
+  };
+
+  const handleEdit = (reservation) => {
+    setSelectedReservation(reservation);
+    setEditModalOpen(true);
+  };
+
+  const handleEditModalClose = () => {
+    setEditModalOpen(false);
+    setSelectedReservation(null);
+  };
+
+  const handleReservationUpdate = (updatedReservation) => {
+    setReservations(reservations.map(r => r.Id === updatedReservation.Id ? updatedReservation : r));
   };
 
   if (loading) return <Loading />;
@@ -151,12 +181,23 @@ filteredReservations = filteredReservations.filter(r => (r.status_c || r.status)
                     ? format(new Date(reservation.checkOutDate_c || reservation.checkOut), "MMM dd, yyyy")
                     : "N/A"}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <StatusBadge status={reservation.status_c || reservation.status} />
+<td className="px-6 py-4 whitespace-nowrap">
+                  <Select
+                    value={reservation.status_c || reservation.status || 'pending'}
+                    onChange={(e) => handleStatusChange(reservation, e.target.value)}
+                    className="min-w-[140px] text-sm"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="checkedin">Checked In</option>
+                    <option value="checkedout">Checked Out</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="noshow">No Show</option>
+                  </Select>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div className="flex gap-2">
-{(reservation.status_c || reservation.status) === "confirmed" && (
+<div className="flex gap-2">
+                    {(reservation.status_c || reservation.status) === "confirmed" && (
                       <Button
                         size="sm"
                         onClick={() => handleCheckIn(reservation)}
@@ -165,7 +206,7 @@ filteredReservations = filteredReservations.filter(r => (r.status_c || r.status)
                         Check In
                       </Button>
                     )}
-{(reservation.status_c || reservation.status) === "checkedin" && (
+                    {(reservation.status_c || reservation.status) === "checkedin" && (
                       <Button
                         size="sm"
                         variant="secondary"
@@ -175,8 +216,13 @@ filteredReservations = filteredReservations.filter(r => (r.status_c || r.status)
                         Check Out
                       </Button>
                     )}
-                    <Button size="sm" variant="ghost">
-                      <ApperIcon name="Eye" className="h-3 w-3" />
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => handleEdit(reservation)}
+                    >
+                      <ApperIcon name="Edit" className="h-3 w-3 mr-1" />
+                      Edit
                     </Button>
                   </div>
                 </td>
@@ -184,9 +230,16 @@ filteredReservations = filteredReservations.filter(r => (r.status_c || r.status)
             ))}
           </tbody>
         </table>
+</table>
       </div>
+      
+      <EditReservationModal
+        reservation={selectedReservation}
+        isOpen={editModalOpen}
+        onClose={handleEditModalClose}
+        onUpdate={handleReservationUpdate}
+      />
     </div>
   );
-};
 
 export default ReservationTable;
