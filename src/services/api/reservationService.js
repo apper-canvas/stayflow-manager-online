@@ -181,12 +181,17 @@ const updateableFields = {
           failed.forEach(record => {
             record.errors?.forEach(error => toast.error(`${error.fieldLabel}: ${error}`));
             if (record.message) toast.error(record.message);
-          });
+});
         }
-        return successful.length > 0 ? successful[0].data : null;
+        
+        if (successful.length > 0) {
+          // Fetch the updated record to ensure we have the latest data with lookup fields
+          const updatedRecord = await this.getById(successful[0].data.Id);
+          return updatedRecord;
+        }
       }
       
-      return response.data;
+      return null;
     } catch (error) {
       console.error("Error updating reservation:", error?.response?.data?.message || error);
       return null;
