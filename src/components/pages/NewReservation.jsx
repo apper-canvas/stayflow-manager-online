@@ -25,8 +25,8 @@ const [loading, setLoading] = useState(false);
   const [guestModalLoading, setGuestModalLoading] = useState(false);
   
   const [formData, setFormData] = useState({
-    guestId: "",
-    roomId: "",
+guestId_c: "",
+    roomId_c: "",
     checkInDate: "",
     checkOutDate: "",
     adults: 1,
@@ -84,14 +84,14 @@ useEffect(() => {
           setFormData(prev => ({ ...prev, totalAmount: total }));
         }
       }
-    }
-  }, [formData.checkInDate, formData.checkOutDate, formData.roomId, rooms]);
+}
+  }, [formData.checkInDate, formData.checkOutDate, formData.roomId_c, rooms]);
 
   const validateForm = () => {
     const errors = {};
 
-    if (!formData.guestId) errors.guestId = "Please select a guest";
-    if (!formData.roomId) errors.roomId = "Please select a room";
+if (!formData.guestId_c) errors.guestId_c = "Please select a guest";
+    if (!formData.roomId_c) errors.roomId_c = "Please select a room";
     if (!formData.checkInDate) errors.checkInDate = "Check-in date is required";
     if (!formData.checkOutDate) errors.checkOutDate = "Check-out date is required";
     
@@ -117,8 +117,8 @@ useEffect(() => {
   };
 
 const handleInputChange = (field, value) => {
-    // Handle 'New Guest' option
-    if (field === "guestId" && value === "new-guest") {
+// Handle 'New Guest' option
+    if (field === "guestId_c" && value === "new-guest") {
       setShowGuestModal(true);
       return;
     }
@@ -138,7 +138,7 @@ const handleInputChange = (field, value) => {
       setGuests(prev => [...prev, createdGuest]);
       
       // Select the new guest in the form
-      setFormData(prev => ({ ...prev, guestId: createdGuest.Id }));
+setFormData(prev => ({ ...prev, guestId_c: createdGuest.Id }));
       
       // Close the modal
       setShowGuestModal(false);
@@ -166,9 +166,9 @@ const handleInputChange = (field, value) => {
       setLoading(true);
       
       const reservationData = {
-        ...formData,
-        guestId: parseInt(formData.guestId),
-        roomId: parseInt(formData.roomId),
+...formData,
+        guestId_c: parseInt(formData.guestId_c),
+        roomId_c: parseInt(formData.roomId_c),
         adults: parseInt(formData.adults),
         children: parseInt(formData.children),
         totalAmount: parseFloat(formData.totalAmount)
@@ -183,8 +183,8 @@ await reservationService.create(reservationData);
     }
   };
 
-  const selectedRoom = rooms.find(room => room.Id === parseInt(formData.roomId));
-  const selectedGuest = guests.find(guest => guest.Id === parseInt(formData.guestId));
+const selectedRoom = rooms.find(room => room.Id === parseInt(formData.roomId_c));
+  const selectedGuest = guests.find(guest => guest.Id === parseInt(formData.guestId_c));
 
   if (loading && guests.length === 0) {
     return (
@@ -225,13 +225,13 @@ await reservationService.create(reservationData);
                 Select Guest *
               </label>
 <SearchableSelect
-                value={formData.guestId_c}
+value={formData.guestId_c}
                 onChange={(e) => handleInputChange("guestId_c", e.target.value)}
                 options={[
                   { value: '', label: 'Choose a guest...' },
                   { value: 'new-guest', label: '+ New Guest', isNewGuestOption: true },
                   ...guests.map((guest) => ({
-                    value: guest.Id,
+value: guest.Id,
                     label: `${guest.firstName_c || guest.Name} ${guest.lastName_c || ''} - ${guest.email_c || guest.email}`,
                     guest: guest
                   }))
@@ -240,8 +240,8 @@ placeholder="Search guests by name or email..."
                 filterOption={(option, searchTerm) => {
                   if (!option.guest && !option.isNewGuestOption) return true; // Keep system options
                   if (option.isNewGuestOption) return true; // Always show "New Guest" option
-                  const searchLower = searchTerm.toLowerCase();
-const guest = option.guest;
+const searchLower = searchTerm.toLowerCase();
+                  const guest = option.guest;
                   return (
                     (guest.firstName_c || guest.Name || '')?.toLowerCase().includes(searchLower) ||
                     (guest.lastName_c || '')?.toLowerCase().includes(searchLower) ||
@@ -258,12 +258,12 @@ className={formErrors.guestId_c ? "border-red-500" : ""}
                 Select Room *
               </label>
 <SearchableSelect
-                value={formData.roomId_c}
+value={formData.roomId_c}
                 onChange={(e) => handleInputChange("roomId_c", e.target.value)}
                 options={[
                   { value: '', label: 'Choose a room...' },
                   ...availableRooms.map((room) => ({
-                    value: room.Id,
+value: room.Id,
                     label: `Room ${room.number_c || room.number} - ${room.type_c || room.type} ($${room.baseRate_c || room.pricePerNight}/night)`,
                     room: room
                   }))
@@ -279,8 +279,8 @@ return (
                     (room.baseRate_c || room.pricePerNight || '')?.toString().includes(searchTerm)
                   );
                 }}
-                className={formErrors.roomId_c ? "border-red-500" : ""}
-/>
+className={formErrors.roomId_c ? "border-red-500" : ""}
+              />
               {formErrors.roomId_c && <p className="text-red-500 text-sm mt-1">{formErrors.roomId_c}</p>}
             </div>
           </div>
@@ -377,12 +377,12 @@ return (
               <div className="flex justify-between">
                 <span className="text-gray-600">Guest:</span>
                 <span className="font-medium">
-                  {selectedGuest ? `${selectedGuest.firstName} ${selectedGuest.lastName}` : 'Not selected'}
+{selectedGuest ? `${selectedGuest.firstName_c || selectedGuest.Name} ${selectedGuest.lastName_c || ''}` : 'Not selected'}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Room:</span>
-                <span className="font-medium">Room {selectedRoom.number} - {selectedRoom.type}</span>
+<span className="font-medium">Room {selectedRoom.number_c || selectedRoom.number} - {selectedRoom.type_c || selectedRoom.type}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Dates:</span>

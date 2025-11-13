@@ -1,55 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { toast } from 'react-toastify';
-import Button from '@/components/atoms/Button';
-import Input from '@/components/atoms/Input';
-import Select from '@/components/atoms/Select';
-import FormField from '@/components/molecules/FormField';
-import ApperIcon from '@/components/ApperIcon';
-import reservationService from '@/services/api/reservationService';
-import guestService from '@/services/api/guestService';
-import roomService from '@/services/api/roomService';
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import reservationService from "@/services/api/reservationService";
+import guestService from "@/services/api/guestService";
+import roomService from "@/services/api/roomService";
+import ApperIcon from "@/components/ApperIcon";
+import FormField from "@/components/molecules/FormField";
+import Select from "@/components/atoms/Select";
+import Button from "@/components/atoms/Button";
+import SearchableSelect from "@/components/atoms/SearchableSelect";
+import Input from "@/components/atoms/Input";
 
 const EditReservationModal = ({ reservation, isOpen, onClose, onUpdate }) => {
   const [formData, setFormData] = useState({
-    guestName: '',
-    roomNumber: '',
-    roomType: '',
+guestId_c: '',
+    roomId_c: '',
     checkInDate: '',
     checkOutDate: '',
     adults: 1,
     children: 0,
     totalAmount: 0,
     specialRequests: '',
-    status: 'pending',
-    guestId: null,
-    roomId: null
+    status: 'pending'
   });
   
-  const [loading, setLoading] = useState(false);
   const [guests, setGuests] = useState([]);
   const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-
-  useEffect(() => {
-    if (reservation && isOpen) {
-setFormData({
-        guestName: reservation.guestId_c?.Name || reservation.guestName_c || reservation.guestName || '',
-        roomNumber: reservation.roomId_c?.Name || reservation.roomNumber_c || reservation.roomNumber || '',
-        roomType: reservation.roomId_c?.type_c || reservation.roomType_c || reservation.roomType || '',
-        checkInDate: reservation.checkInDate_c || reservation.checkInDate || '',
-        checkOutDate: reservation.checkOutDate_c || reservation.checkOutDate || '',
-        adults: reservation.adults_c || reservation.adults || 1,
-        children: reservation.children_c || reservation.children || 0,
-        totalAmount: reservation.totalAmount_c || reservation.totalAmount || 0,
-        specialRequests: reservation.specialRequests_c || reservation.specialRequests || '',
-        status: reservation.status_c || reservation.status || 'pending',
-        guestId_c: reservation.guestId_c?.Id || reservation.guestId_c || reservation.guestId || null,
-        roomId_c: reservation.roomId_c?.Id || reservation.roomId_c || reservation.roomId || null
-      });
-      
-      loadData();
-    }
-  }, [reservation, isOpen]);
 
   const loadData = async () => {
     try {
@@ -62,10 +39,28 @@ setFormData({
       setRooms(roomsData || []);
     } catch (error) {
       console.error('Error loading data:', error);
+      toast.error('Failed to load guests and rooms data');
     }
   };
 
-  const handleInputChange = (field, value) => {
+  useEffect(() => {
+    if (reservation && isOpen) {
+      loadData();
+      
+      setFormData({
+        guestId_c: reservation.guestId_c?.Id || reservation.guestId_c || '',
+        roomId_c: reservation.roomId_c?.Id || reservation.roomId_c || '',
+        checkInDate: reservation.checkInDate_c || reservation.checkInDate || '',
+        checkOutDate: reservation.checkOutDate_c || reservation.checkOutDate || '',
+        adults: reservation.adults_c || reservation.adults || 1,
+        children: reservation.children_c || reservation.children || 0,
+        totalAmount: reservation.totalAmount_c || reservation.totalAmount || 0,
+        specialRequests: reservation.specialRequests_c || reservation.specialRequests || '',
+        status: reservation.status_c || reservation.status || 'pending'
+      });
+    }
+  }, [reservation, isOpen]);
+const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -82,13 +77,12 @@ setFormData({
 
   const validateForm = () => {
     const newErrors = {};
-    
-    if (!formData.guestName.trim()) {
-      newErrors.guestName = 'Guest name is required';
+if (!formData.guestId_c) {
+      newErrors.guestId_c = 'Please select a guest';
     }
     
-    if (!formData.roomNumber.trim()) {
-      newErrors.roomNumber = 'Room number is required';
+    if (!formData.roomId_c) {
+      newErrors.roomId_c = 'Please select a room';
     }
     
     if (!formData.checkInDate) {
@@ -128,18 +122,15 @@ setFormData({
     
     try {
 const updatedReservation = await reservationService.update(reservation.Id, {
-        guestName_c: formData.guestName,
-        roomNumber_c: formData.roomNumber,
-        roomType_c: formData.roomType,
+guestId_c: parseInt(formData.guestId_c),
+        roomId_c: parseInt(formData.roomId_c),
         checkInDate_c: formData.checkInDate,
         checkOutDate_c: formData.checkOutDate,
-        adults_c: formData.adults,
-        children_c: formData.children,
-        totalAmount_c: formData.totalAmount,
+        adults_c: parseInt(formData.adults),
+        children_c: parseInt(formData.children),
+        totalAmount_c: parseFloat(formData.totalAmount),
         specialRequests_c: formData.specialRequests,
-        status_c: formData.status,
-        guestId_c: formData.guestId_c,
-        roomId_c: formData.roomId_c
+        status_c: formData.status
       });
       
       if (updatedReservation) {
@@ -157,18 +148,15 @@ const updatedReservation = await reservationService.update(reservation.Id, {
 
   const handleClose = () => {
     setFormData({
-      guestName: '',
-      roomNumber: '',
-      roomType: '',
+guestId_c: '',
+      roomId_c: '',
       checkInDate: '',
       checkOutDate: '',
       adults: 1,
       children: 0,
       totalAmount: 0,
       specialRequests: '',
-      status: 'pending',
-guestId_c: null,
-      roomId_c: null
+      status: 'pending'
     });
     setErrors({});
     onClose();
@@ -191,13 +179,28 @@ guestId_c: null,
         
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label="Guest Name" error={errors.guestName} required>
-              <Input
-                type="text"
-                value={formData.guestName}
-                onChange={(e) => handleInputChange('guestName', e.target.value)}
-                placeholder="Enter guest name"
-                className={errors.guestName ? 'border-red-500' : ''}
+<FormField label="Guest" error={errors.guestId_c} required>
+              <SearchableSelect
+                placeholder="Select a guest..."
+                value={formData.guestId_c}
+                onChange={(e) => handleInputChange('guestId_c', e.target.value)}
+                options={guests.map(guest => ({
+                  value: guest.Id,
+                  label: `${guest.firstName_c || guest.Name} ${guest.lastName_c || ''} - ${guest.email_c || guest.email}`,
+                  guest: guest
+                }))}
+                searchFunction={(options, searchTerm) => {
+                  const searchLower = searchTerm.toLowerCase();
+                  return options.filter(option => {
+                    const guest = option.guest;
+                    return (
+                      (guest.firstName_c || guest.Name || '')?.toLowerCase().includes(searchLower) ||
+                      (guest.lastName_c || '')?.toLowerCase().includes(searchLower) ||
+                      (guest.email_c || guest.email || '')?.toLowerCase().includes(searchLower)
+                    );
+                  });
+                }}
+                className={errors.guestId_c ? "border-red-500" : ""}
               />
             </FormField>
             
@@ -217,24 +220,31 @@ guestId_c: null,
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label="Room Number" error={errors.roomNumber} required>
-              <Input
-                type="text"
-                value={formData.roomNumber}
-                onChange={(e) => handleInputChange('roomNumber', e.target.value)}
-                placeholder="Enter room number"
-                className={errors.roomNumber ? 'border-red-500' : ''}
+<FormField label="Room" error={errors.roomId_c} required>
+              <SearchableSelect
+                placeholder="Select a room..."
+                value={formData.roomId_c}
+                onChange={(e) => handleInputChange('roomId_c', e.target.value)}
+                options={rooms.map(room => ({
+                  value: room.Id,
+                  label: `Room ${room.number_c || room.number} - ${room.type_c || room.type} ($${room.baseRate_c || room.pricePerNight}/night)`,
+                  room: room
+                }))}
+                searchFunction={(options, searchTerm) => {
+                  const searchLower = searchTerm.toLowerCase();
+                  return options.filter(option => {
+                    const room = option.room;
+                    return (
+                      (room.number_c || room.number || '')?.toString().toLowerCase().includes(searchLower) ||
+                      (room.type_c || room.type || '')?.toLowerCase().includes(searchLower) ||
+                      (room.baseRate_c || room.pricePerNight || '')?.toString().includes(searchTerm)
+                    );
+                  });
+                }}
+                className={errors.roomId_c ? "border-red-500" : ""}
               />
             </FormField>
             
-            <FormField label="Room Type">
-              <Input
-                type="text"
-                value={formData.roomType}
-                onChange={(e) => handleInputChange('roomType', e.target.value)}
-                placeholder="Enter room type"
-              />
-            </FormField>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
