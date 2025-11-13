@@ -37,7 +37,7 @@ const [reservations, setReservations] = useState([]);
 
 const handleStatusChange = async (reservation, newStatus) => {
     try {
-      const result = await reservationService.update(reservation.Id, { status: newStatus });
+const result = await reservationService.update(reservation.Id, { status_c: newStatus });
       if (result) {
         setReservations(reservations.map(r => r.Id === reservation.Id ? { ...r, status_c: newStatus } : r));
         toast.success(`Reservation status updated to ${newStatus}`);
@@ -49,11 +49,11 @@ const handleStatusChange = async (reservation, newStatus) => {
 
   const handleCheckIn = async (reservation) => {
     try {
-      const updatedData = { status: "checkedin" };
+const updatedData = { status_c: "checkedin" };
       const result = await reservationService.update(reservation.Id, updatedData);
       if (result) {
         setReservations(reservations.map(r => r.Id === reservation.Id ? { ...r, ...result } : r));
-        toast.success(`Guest ${reservation.guestName_c || reservation.guestName} checked in successfully`);
+        toast.success(`Guest ${reservation.guestId_c?.Name || reservation.guestName_c || reservation.guestName} checked in successfully`);
       }
     } catch (err) {
       toast.error("Failed to check in guest");
@@ -62,11 +62,11 @@ const handleStatusChange = async (reservation, newStatus) => {
 
   const handleCheckOut = async (reservation) => {
     try {
-      const updatedData = { status: "checkedout" };
+const updatedData = { status_c: "checkedout" };
       const result = await reservationService.update(reservation.Id, updatedData);
       if (result) {
         setReservations(reservations.map(r => r.Id === reservation.Id ? { ...r, ...result } : r));
-        toast.success(`Guest ${reservation.guestName_c || reservation.guestName} checked out successfully`);
+        toast.success(`Guest ${reservation.guestId_c?.Name || reservation.guestName_c || reservation.guestName} checked out successfully`);
       }
     } catch (err) {
       toast.error("Failed to check out guest");
@@ -96,9 +96,9 @@ const handleStatusChange = async (reservation, newStatus) => {
 filteredReservations = filteredReservations.filter(r => (r.status_c || r.status) === statusFilter);
   }
   if (searchQuery) {
-    filteredReservations = filteredReservations.filter(r => 
-      (r.guestName_c || r.guestName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (r.roomNumber_c || r.roomNumber || '').toLowerCase().includes(searchQuery.toLowerCase())
+filteredReservations = filteredReservations.filter(r => 
+      (r.guestId_c?.Name || r.guestName_c || r.guestName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (r.roomId_c?.Name || r.roomNumber_c || r.roomNumber || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
   }
 
@@ -148,7 +148,7 @@ filteredReservations = filteredReservations.filter(r => (r.status_c || r.status)
                     </div>
                     <div>
 <div className="text-sm font-medium text-gray-900">
-                        {reservation.guestName_c || reservation.guestName}
+                        {reservation.guestId_c?.Name || reservation.guestName_c || reservation.guestName}
                       </div>
                       <div className="text-sm text-gray-500">
                         {reservation.adults_c || reservation.adults || 0} adults, {reservation.children_c || reservation.children || 0} children
@@ -162,11 +162,11 @@ filteredReservations = filteredReservations.filter(r => (r.status_c || r.status)
                       <ApperIcon name="Home" className="h-4 w-4 text-blue-600" />
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        Room {reservation.roomNumber_c || reservation.roomNumber}
+<div className="text-sm font-medium text-gray-900">
+                        Room {reservation.roomId_c?.Name || reservation.roomNumber_c || reservation.roomNumber}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {reservation.roomType_c || reservation.roomType || 'Standard'}
+                        {reservation.roomId_c?.type_c || reservation.roomType_c || reservation.roomType || 'Standard'}
                       </div>
                     </div>
                   </div>

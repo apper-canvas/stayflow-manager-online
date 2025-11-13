@@ -32,10 +32,10 @@ const EditReservationModal = ({ reservation, isOpen, onClose, onUpdate }) => {
 
   useEffect(() => {
     if (reservation && isOpen) {
-      setFormData({
-        guestName: reservation.guestName_c || reservation.guestName || '',
-        roomNumber: reservation.roomNumber_c || reservation.roomNumber || '',
-        roomType: reservation.roomType_c || reservation.roomType || '',
+setFormData({
+        guestName: reservation.guestId_c?.Name || reservation.guestName_c || reservation.guestName || '',
+        roomNumber: reservation.roomId_c?.Name || reservation.roomNumber_c || reservation.roomNumber || '',
+        roomType: reservation.roomId_c?.type_c || reservation.roomType_c || reservation.roomType || '',
         checkInDate: reservation.checkInDate_c || reservation.checkInDate || '',
         checkOutDate: reservation.checkOutDate_c || reservation.checkOutDate || '',
         adults: reservation.adults_c || reservation.adults || 1,
@@ -43,8 +43,8 @@ const EditReservationModal = ({ reservation, isOpen, onClose, onUpdate }) => {
         totalAmount: reservation.totalAmount_c || reservation.totalAmount || 0,
         specialRequests: reservation.specialRequests_c || reservation.specialRequests || '',
         status: reservation.status_c || reservation.status || 'pending',
-        guestId: reservation.guestId_c || reservation.guestId || null,
-        roomId: reservation.roomId_c || reservation.roomId || null
+        guestId_c: reservation.guestId_c?.Id || reservation.guestId_c || reservation.guestId || null,
+        roomId_c: reservation.roomId_c?.Id || reservation.roomId_c || reservation.roomId || null
       });
       
       loadData();
@@ -127,19 +127,19 @@ const EditReservationModal = ({ reservation, isOpen, onClose, onUpdate }) => {
     setLoading(true);
     
     try {
-      const updatedReservation = await reservationService.update(reservation.Id, {
-        guestName: formData.guestName,
-        roomNumber: formData.roomNumber,
-        roomType: formData.roomType,
-        checkInDate: formData.checkInDate,
-        checkOutDate: formData.checkOutDate,
-        adults: formData.adults,
-        children: formData.children,
-        totalAmount: formData.totalAmount,
-        specialRequests: formData.specialRequests,
-        status: formData.status,
-        guestId: formData.guestId,
-        roomId: formData.roomId
+const updatedReservation = await reservationService.update(reservation.Id, {
+        guestName_c: formData.guestName,
+        roomNumber_c: formData.roomNumber,
+        roomType_c: formData.roomType,
+        checkInDate_c: formData.checkInDate,
+        checkOutDate_c: formData.checkOutDate,
+        adults_c: formData.adults,
+        children_c: formData.children,
+        totalAmount_c: formData.totalAmount,
+        specialRequests_c: formData.specialRequests,
+        status_c: formData.status,
+        guestId_c: formData.guestId_c,
+        roomId_c: formData.roomId_c
       });
       
       if (updatedReservation) {
@@ -167,8 +167,8 @@ const EditReservationModal = ({ reservation, isOpen, onClose, onUpdate }) => {
       totalAmount: 0,
       specialRequests: '',
       status: 'pending',
-      guestId: null,
-      roomId: null
+guestId_c: null,
+      roomId_c: null
     });
     setErrors({});
     onClose();

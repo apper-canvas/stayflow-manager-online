@@ -1,5 +1,6 @@
-import { getApperClient } from '@/services/apperClient';
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
+import React from "react";
+import { getApperClient } from "@/services/apperClient";
 
 const reservationService = {
   async getAll() {
@@ -100,7 +101,7 @@ const reservationService = {
         }
       });
 
-      const response = await apperClient.createRecord('reservations_c', {
+const response = await apperClient.createRecord('reservations_c', {
         records: [updateableData]
       });
 
@@ -123,19 +124,22 @@ const reservationService = {
         }
         return successful.length > 0 ? successful[0].data : null;
       }
+      
+      return response.data;
     } catch (error) {
       console.error("Error creating reservation:", error?.response?.data?.message || error);
       return null;
     }
   },
 
-  async update(id, updatedData) {
+async update(id, updatedData) {
     try {
       const apperClient = getApperClient();
       
       // Filter only updateable fields
       const updateableFields = {
-        Id: id,
+        Id: parseInt(id),
+        Name: updatedData.Name,
         guestName_c: updatedData.guestName,
         roomNumber_c: updatedData.roomNumber,
         roomType_c: updatedData.roomType,
@@ -180,6 +184,8 @@ const reservationService = {
         }
         return successful.length > 0 ? successful[0].data : null;
       }
+      
+      return response.data;
     } catch (error) {
       console.error("Error updating reservation:", error?.response?.data?.message || error);
       return null;

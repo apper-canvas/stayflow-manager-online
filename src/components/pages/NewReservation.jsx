@@ -225,14 +225,14 @@ await reservationService.create(reservationData);
                 Select Guest *
               </label>
 <SearchableSelect
-                value={formData.guestId}
-                onChange={(e) => handleInputChange("guestId", e.target.value)}
+                value={formData.guestId_c}
+                onChange={(e) => handleInputChange("guestId_c", e.target.value)}
                 options={[
                   { value: '', label: 'Choose a guest...' },
                   { value: 'new-guest', label: '+ New Guest', isNewGuestOption: true },
                   ...guests.map((guest) => ({
                     value: guest.Id,
-                    label: `${guest.firstName} ${guest.lastName} - ${guest.email}`,
+                    label: `${guest.firstName_c || guest.Name} ${guest.lastName_c || ''} - ${guest.email_c || guest.email}`,
                     guest: guest
                   }))
                 ]}
@@ -241,30 +241,30 @@ placeholder="Search guests by name or email..."
                   if (!option.guest && !option.isNewGuestOption) return true; // Keep system options
                   if (option.isNewGuestOption) return true; // Always show "New Guest" option
                   const searchLower = searchTerm.toLowerCase();
-                  const guest = option.guest;
+const guest = option.guest;
                   return (
-                    guest.firstName?.toLowerCase().includes(searchLower) ||
-                    guest.lastName?.toLowerCase().includes(searchLower) ||
-                    guest.email?.toLowerCase().includes(searchLower)
+                    (guest.firstName_c || guest.Name || '')?.toLowerCase().includes(searchLower) ||
+                    (guest.lastName_c || '')?.toLowerCase().includes(searchLower) ||
+                    (guest.email_c || guest.email || '')?.toLowerCase().includes(searchLower)
                   );
                 }}
-                className={formErrors.guestId ? "border-red-500" : ""}
+className={formErrors.guestId_c ? "border-red-500" : ""}
               />
-              {formErrors.guestId && <p className="text-red-500 text-sm mt-1">{formErrors.guestId}</p>}
+              {formErrors.guestId_c && <p className="text-red-500 text-sm mt-1">{formErrors.guestId_c}</p>}
             </div>
 
 <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Room *
               </label>
-              <SearchableSelect
-                value={formData.roomId}
-                onChange={(e) => handleInputChange("roomId", e.target.value)}
+<SearchableSelect
+                value={formData.roomId_c}
+                onChange={(e) => handleInputChange("roomId_c", e.target.value)}
                 options={[
                   { value: '', label: 'Choose a room...' },
                   ...availableRooms.map((room) => ({
                     value: room.Id,
-                    label: `Room ${room.number} - ${room.type} ($${room.pricePerNight}/night)`,
+                    label: `Room ${room.number_c || room.number} - ${room.type_c || room.type} ($${room.baseRate_c || room.pricePerNight}/night)`,
                     room: room
                   }))
                 ]}
@@ -273,15 +273,15 @@ placeholder="Search guests by name or email..."
                   if (!option.room) return true; // Keep the "Choose a room..." option
                   const searchLower = searchTerm.toLowerCase();
                   const room = option.room;
-                  return (
-                    room.number?.toString().toLowerCase().includes(searchLower) ||
-                    room.type?.toLowerCase().includes(searchLower) ||
-                    room.pricePerNight?.toString().includes(searchTerm)
+return (
+                    (room.number_c || room.number || '')?.toString().toLowerCase().includes(searchLower) ||
+                    (room.type_c || room.type || '')?.toLowerCase().includes(searchLower) ||
+                    (room.baseRate_c || room.pricePerNight || '')?.toString().includes(searchTerm)
                   );
                 }}
-                className={formErrors.roomId ? "border-red-500" : ""}
-              />
-              {formErrors.roomId && <p className="text-red-500 text-sm mt-1">{formErrors.roomId}</p>}
+                className={formErrors.roomId_c ? "border-red-500" : ""}
+/>
+              {formErrors.roomId_c && <p className="text-red-500 text-sm mt-1">{formErrors.roomId_c}</p>}
             </div>
           </div>
         </Card>
