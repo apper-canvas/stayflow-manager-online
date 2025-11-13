@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
-import EditReservationModal from "@/components/organisms/EditReservationModal";
 import reservationService from "@/services/api/reservationService";
 import ApperIcon from "@/components/ApperIcon";
 import StatusBadge from "@/components/molecules/StatusBadge";
 import Loading from "@/components/ui/Loading";
 import Empty from "@/components/ui/Empty";
 import ErrorView from "@/components/ui/ErrorView";
+import EditReservationModal from "@/components/organisms/EditReservationModal";
 import Select from "@/components/atoms/Select";
 import Button from "@/components/atoms/Button";
 
@@ -227,10 +227,9 @@ filteredReservations = filteredReservations.filter(r => (r.status_c || r.status)
                   </div>
                 </td>
               </tr>
-            ))}
+))}
           </tbody>
         </table>
-</table>
       </div>
       
       <EditReservationModal
@@ -239,7 +238,8 @@ filteredReservations = filteredReservations.filter(r => (r.status_c || r.status)
         onClose={handleEditModalClose}
         onUpdate={handleReservationUpdate}
       />
-    </div>
+</div>
   );
+};
 
 export default ReservationTable;
