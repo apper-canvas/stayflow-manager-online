@@ -54,9 +54,14 @@ const StatusBadge = ({ status, className, showIcon = true }) => {
       label: "Paid",
       icon: "CheckCircle"
     },
-    unpaid: {
-      variant: "warning",
+unpaid: {
+      variant: "error",
       label: "Unpaid",
+      icon: "XCircle"
+    },
+    partial: {
+      variant: "warning",
+      label: "Partial",
       icon: "Clock"
     },
     overdue: {
