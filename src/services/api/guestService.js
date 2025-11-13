@@ -47,18 +47,8 @@ const guestService = {
           {"field": {"Name": "vipStatus_c"}},
           {"field": {"Name": "address_c"}},
           {"field": {"Name": "preferences_c"}},
-{"field": {"Name": "firstName_c"}},
-          {"field": {"Name": "lastName_c"}},
-          {"field": {"Name": "email_c"}},
-          {"field": {"Name": "phone_c"}},
-          {"field": {"Name": "idType_c"}},
-          {"field": {"Name": "idNumber_c"}},
-          {"field": {"Name": "vipStatus_c"}},
-          {"field": {"Name": "address_c"}},
-          {"field": {"Name": "preferences_c"}},
           {"field": {"Name": "allergies_c"}},
           {"field": {"Name": "stayNotes_c"}},
-          {"field": {"Name": "stayHistory_c"}},
           {"field": {"Name": "stayHistory_c"}}
         ]
       });
@@ -81,11 +71,11 @@ const guestService = {
         email: guest.email_c || '',
         phone: guest.phone_c || '',
         idType: guest.idType_c || '',
-idNumber: guest.idNumber_c || '',
+        idNumber: guest.idNumber_c || '',
         vipStatus: guest.vipStatus_c || false,
         address: safeJsonParse(guest.address_c, {}),
         preferences: guest.preferences_c?.split(',') || [],
-        allergies: guest.allergies_c || '',
+        allergies: guest.allergies_c ? guest.allergies_c.split('\n').filter(a => a.trim()) : [],
         stayNotes: guest.stayNotes_c || '',
         stayHistory: safeJsonParse(guest.stayHistory_c, [])
       }));
@@ -110,18 +100,8 @@ idNumber: guest.idNumber_c || '',
           {"field": {"Name": "vipStatus_c"}},
           {"field": {"Name": "address_c"}},
           {"field": {"Name": "preferences_c"}},
-{"field": {"Name": "firstName_c"}},
-          {"field": {"Name": "lastName_c"}},
-          {"field": {"Name": "email_c"}},
-          {"field": {"Name": "phone_c"}},
-          {"field": {"Name": "idType_c"}},
-          {"field": {"Name": "idNumber_c"}},
-          {"field": {"Name": "vipStatus_c"}},
-          {"field": {"Name": "address_c"}},
-          {"field": {"Name": "preferences_c"}},
           {"field": {"Name": "allergies_c"}},
           {"field": {"Name": "stayNotes_c"}},
-          {"field": {"Name": "stayHistory_c"}},
           {"field": {"Name": "stayHistory_c"}}
         ]
       });
@@ -138,11 +118,11 @@ idNumber: guest.idNumber_c || '',
         email: guest.email_c || '',
         phone: guest.phone_c || '',
         idType: guest.idType_c || '',
-idNumber: guest.idNumber_c || '',
+        idNumber: guest.idNumber_c || '',
         vipStatus: guest.vipStatus_c || false,
         address: safeJsonParse(guest.address_c, {}),
         preferences: guest.preferences_c?.split(',') || [],
-        allergies: guest.allergies_c || '',
+        allergies: guest.allergies_c ? guest.allergies_c.split('\n').filter(a => a.trim()) : [],
         stayNotes: guest.stayNotes_c || '',
         stayHistory: safeJsonParse(guest.stayHistory_c, [])
       };
@@ -163,15 +143,34 @@ idNumber: guest.idNumber_c || '',
         lastName_c: guestData.lastName || '',
         email_c: guestData.email || '',
         phone_c: guestData.phone || '',
-idType_c: guestData.idType || '',
+        idType_c: guestData.idType || '',
         idNumber_c: guestData.idNumber || '',
-        ...(guestData.preferences && Array.isArray(guestData.preferences) && guestData.preferences.length > 0 
-          ? { preferences_c: guestData.preferences.join(',') } 
-          : {}),
-        allergies_c: guestData.allergies || '',
-        stayNotes_c: guestData.stayNotes || '',
-        stayHistory_c: JSON.stringify(guestData.stayHistory || [])
+        vipStatus_c: guestData.vipStatus || false
       };
+
+      // Handle preferences as comma-separated string
+      if (guestData.preferences && Array.isArray(guestData.preferences) && guestData.preferences.length > 0) {
+        updateableData.preferences_c = guestData.preferences.join(',');
+      }
+
+      // Handle allergies as newline-separated string
+      if (guestData.allergies && Array.isArray(guestData.allergies) && guestData.allergies.length > 0) {
+        updateableData.allergies_c = guestData.allergies.join('\n');
+      }
+
+      // Handle optional fields
+      if (guestData.address && typeof guestData.address === 'object') {
+        updateableData.address_c = JSON.stringify(guestData.address);
+      }
+
+      if (guestData.stayNotes) {
+        updateableData.stayNotes_c = guestData.stayNotes;
+      }
+
+      if (guestData.stayHistory && Array.isArray(guestData.stayHistory)) {
+        updateableData.stayHistory_c = JSON.stringify(guestData.stayHistory);
+      }
+
       // Remove fields with null, undefined, or empty string values
       Object.keys(updateableData).forEach(key => {
         if (updateableData[key] === null || updateableData[key] === undefined || updateableData[key] === '') {
@@ -192,8 +191,9 @@ idType_c: guestData.idType || '',
       if (response.results) {
         const successful = response.results.filter(r => r.success);
         const failed = response.results.filter(r => !r.success);
-if (failed.length > 0) {
-          console.error(`Failed to create ${failed.length} guests:`, failed);
+        
+        if (failed.length > 0) {
+          console.error(`Failed to create ${failed.length} guests: ${JSON.stringify(failed)}`);
           failed.forEach(record => {
             record.errors?.forEach(error => toast.error(`${error.fieldLabel}: ${error.message}`));
             if (record.message) toast.error(record.message);
@@ -218,15 +218,34 @@ if (failed.length > 0) {
         lastName_c: updatedData.lastName,
         email_c: updatedData.email,
         phone_c: updatedData.phone,
-idType_c: updatedData.idType,
+        idType_c: updatedData.idType,
         idNumber_c: updatedData.idNumber,
-        ...(updatedData.preferences && Array.isArray(updatedData.preferences) && updatedData.preferences.length > 0 
-          ? { preferences_c: updatedData.preferences.join(',') } 
-          : {}),
-        allergies_c: updatedData.allergies || undefined,
-        stayNotes_c: updatedData.stayNotes || undefined,
-        stayHistory_c: updatedData.stayHistory ? JSON.stringify(updatedData.stayHistory) : undefined
+        vipStatus_c: updatedData.vipStatus
       };
+
+      // Handle preferences as comma-separated string
+      if (updatedData.preferences && Array.isArray(updatedData.preferences) && updatedData.preferences.length > 0) {
+        updateableFields.preferences_c = updatedData.preferences.join(',');
+      }
+
+      // Handle allergies as newline-separated string
+      if (updatedData.allergies && Array.isArray(updatedData.allergies) && updatedData.allergies.length > 0) {
+        updateableFields.allergies_c = updatedData.allergies.join('\n');
+      }
+
+      // Handle optional fields
+      if (updatedData.address && typeof updatedData.address === 'object') {
+        updateableFields.address_c = JSON.stringify(updatedData.address);
+      }
+
+      if (updatedData.stayNotes) {
+        updateableFields.stayNotes_c = updatedData.stayNotes;
+      }
+
+      if (updatedData.stayHistory && Array.isArray(updatedData.stayHistory)) {
+        updateableFields.stayHistory_c = JSON.stringify(updatedData.stayHistory);
+      }
+
       // Remove fields with null, undefined, or empty string values
       Object.keys(updateableFields).forEach(key => {
         if (updateableFields[key] === null || updateableFields[key] === undefined || updateableFields[key] === '') {
@@ -247,8 +266,9 @@ idType_c: updatedData.idType,
       if (response.results) {
         const successful = response.results.filter(r => r.success);
         const failed = response.results.filter(r => !r.success);
-if (failed.length > 0) {
-          console.error(`Failed to update ${failed.length} guests:`, failed);
+        
+        if (failed.length > 0) {
+          console.error(`Failed to update ${failed.length} guests: ${JSON.stringify(failed)}`);
           failed.forEach(record => {
             record.errors?.forEach(error => toast.error(`${error.fieldLabel}: ${error.message}`));
             if (record.message) toast.error(record.message);
