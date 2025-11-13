@@ -1,17 +1,38 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import ApperIcon from "@/components/ApperIcon";
 import SearchBar from "@/components/molecules/SearchBar";
 import ReservationTable from "@/components/organisms/ReservationTable";
-import Button from "@/components/atoms/Button";
 import Select from "@/components/atoms/Select";
+import Button from "@/components/atoms/Button";
 
 const Reservations = () => {
   const navigate = useNavigate();
-  const [statusFilter, setStatusFilter] = useState("all");
+const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  // Refresh data when page becomes visible/active
+  useEffect(() => {
+    const handlePageFocus = () => {
+      setRefreshTrigger(prev => prev + 1);
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        setRefreshTrigger(prev => prev + 1);
+      }
+    };
+
+    window.addEventListener('focus', handlePageFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', handlePageFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -22,7 +43,6 @@ const Reservations = () => {
         </div>
 <Button onClick={() => {
           navigate('/reservations/new');
-          toast.success('Opening new reservation form...');
         }}>
           <ApperIcon name="Plus" className="h-4 w-4 mr-2" />
           New Reservation
@@ -111,9 +131,10 @@ const Reservations = () => {
       </div>
 
       {/* Reservations Table */}
-      <ReservationTable 
+<ReservationTable 
         statusFilter={statusFilter}
         searchQuery={searchQuery}
+        refreshTrigger={refreshTrigger}
       />
     </div>
   );

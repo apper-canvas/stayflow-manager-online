@@ -11,7 +11,7 @@ import EditReservationModal from "@/components/organisms/EditReservationModal";
 import Select from "@/components/atoms/Select";
 import Button from "@/components/atoms/Button";
 
-const ReservationTable = ({ statusFilter, searchQuery }) => {
+const ReservationTable = ({ statusFilter, searchQuery, refreshTrigger }) => {
 const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -33,7 +33,7 @@ const [reservations, setReservations] = useState([]);
 
   useEffect(() => {
     loadReservations();
-  }, []);
+  }, [refreshTrigger]);
 
 const handleStatusChange = async (reservation, newStatus) => {
     try {

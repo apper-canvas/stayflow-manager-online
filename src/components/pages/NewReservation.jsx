@@ -175,6 +175,7 @@ setFormData(prev => ({ ...prev, guestId_c: createdGuest.Id }));
       };
 
 await reservationService.create(reservationData);
+      toast.success("Reservation created successfully!");
       navigate("/reservations");
     } catch (error) {
       toast.error("Failed to create reservation");
