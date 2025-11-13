@@ -11,16 +11,16 @@ import SearchableSelect from "@/components/atoms/SearchableSelect";
 import Input from "@/components/atoms/Input";
 
 const EditReservationModal = ({ reservation, isOpen, onClose, onUpdate }) => {
-  const [formData, setFormData] = useState({
-guestId_c: '',
+const [formData, setFormData] = useState({
+    guestId_c: '',
     roomId_c: '',
-    checkInDate: '',
-    checkOutDate: '',
-    adults: 1,
-    children: 0,
-    totalAmount: 0,
-    specialRequests: '',
-    status: 'pending'
+    checkInDate_c: '',
+    checkOutDate_c: '',
+    adults_c: 1,
+    children_c: 0,
+    totalAmount_c: 0,
+    specialRequests_c: '',
+    status_c: 'pending'
   });
   
   const [guests, setGuests] = useState([]);
@@ -47,16 +47,16 @@ guestId_c: '',
     if (reservation && isOpen) {
       loadData();
       
-      setFormData({
+setFormData({
         guestId_c: reservation.guestId_c?.Id || reservation.guestId_c || '',
         roomId_c: reservation.roomId_c?.Id || reservation.roomId_c || '',
-        checkInDate: reservation.checkInDate_c || reservation.checkInDate || '',
-        checkOutDate: reservation.checkOutDate_c || reservation.checkOutDate || '',
-        adults: reservation.adults_c || reservation.adults || 1,
-        children: reservation.children_c || reservation.children || 0,
-        totalAmount: reservation.totalAmount_c || reservation.totalAmount || 0,
-        specialRequests: reservation.specialRequests_c || reservation.specialRequests || '',
-        status: reservation.status_c || reservation.status || 'pending'
+        checkInDate_c: reservation.checkInDate_c || reservation.checkInDate || '',
+        checkOutDate_c: reservation.checkOutDate_c || reservation.checkOutDate || '',
+        adults_c: reservation.adults_c || reservation.adults || 1,
+        children_c: reservation.children_c || reservation.children || 0,
+        totalAmount_c: reservation.totalAmount_c || reservation.totalAmount || 0,
+        specialRequests_c: reservation.specialRequests_c || reservation.specialRequests || '',
+        status_c: reservation.status_c || reservation.status || 'pending'
       });
     }
   }, [reservation, isOpen]);
@@ -85,26 +85,26 @@ if (!formData.guestId_c) {
       newErrors.roomId_c = 'Please select a room';
     }
     
-    if (!formData.checkInDate) {
-      newErrors.checkInDate = 'Check-in date is required';
+if (!formData.checkInDate_c) {
+      newErrors.checkInDate_c = 'Check-in date is required';
     }
     
-    if (!formData.checkOutDate) {
-      newErrors.checkOutDate = 'Check-out date is required';
+    if (!formData.checkOutDate_c) {
+      newErrors.checkOutDate_c = 'Check-out date is required';
     }
     
-    if (formData.checkInDate && formData.checkOutDate) {
-      if (new Date(formData.checkInDate) >= new Date(formData.checkOutDate)) {
-        newErrors.checkOutDate = 'Check-out date must be after check-in date';
+if (formData.checkInDate_c && formData.checkOutDate_c) {
+      if (new Date(formData.checkInDate_c) >= new Date(formData.checkOutDate_c)) {
+        newErrors.checkOutDate_c = 'Check-out date must be after check-in date';
       }
     }
     
-    if (formData.adults < 1) {
-      newErrors.adults = 'At least 1 adult is required';
+if (formData.adults_c < 1) {
+      newErrors.adults_c = 'At least 1 adult is required';
     }
     
-    if (formData.totalAmount < 0) {
-      newErrors.totalAmount = 'Total amount cannot be negative';
+    if (formData.totalAmount_c < 0) {
+      newErrors.totalAmount_c = 'Total amount cannot be negative';
     }
     
     setErrors(newErrors);
@@ -124,13 +124,13 @@ if (!formData.guestId_c) {
 const updatedReservation = await reservationService.update(reservation.Id, {
 guestId_c: parseInt(formData.guestId_c),
         roomId_c: parseInt(formData.roomId_c),
-        checkInDate_c: formData.checkInDate,
-        checkOutDate_c: formData.checkOutDate,
-        adults_c: parseInt(formData.adults),
-        children_c: parseInt(formData.children),
-        totalAmount_c: parseFloat(formData.totalAmount),
-        specialRequests_c: formData.specialRequests,
-        status_c: formData.status
+        checkInDate_c: formData.checkInDate_c,
+        checkOutDate_c: formData.checkOutDate_c,
+        adults_c: parseInt(formData.adults_c),
+        children_c: parseInt(formData.children_c),
+        totalAmount_c: parseFloat(formData.totalAmount_c),
+        specialRequests_c: formData.specialRequests_c,
+        status_c: formData.status_c
       });
       
       if (updatedReservation) {
@@ -147,16 +147,16 @@ guestId_c: parseInt(formData.guestId_c),
   };
 
   const handleClose = () => {
-    setFormData({
-guestId_c: '',
+setFormData({
+      guestId_c: '',
       roomId_c: '',
-      checkInDate: '',
-      checkOutDate: '',
-      adults: 1,
-      children: 0,
-      totalAmount: 0,
-      specialRequests: '',
-      status: 'pending'
+      checkInDate_c: '',
+      checkOutDate_c: '',
+      adults_c: 1,
+      children_c: 0,
+      totalAmount_c: 0,
+      specialRequests_c: '',
+      status_c: 'pending'
     });
     setErrors({});
     onClose();
@@ -204,10 +204,10 @@ guestId_c: '',
               />
             </FormField>
             
-            <FormField label="Status" required>
+<FormField label="Status" required>
               <Select
-                value={formData.status}
-                onChange={(e) => handleInputChange('status', e.target.value)}
+                value={formData.status_c}
+                onChange={(e) => handleInputChange('status_c', e.target.value)}
               >
                 <option value="pending">Pending</option>
                 <option value="confirmed">Confirmed</option>
@@ -248,12 +248,12 @@ guestId_c: '',
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label="Check-in Date" error={errors.checkInDate} required>
+<FormField label="Check-in Date" error={errors.checkInDate_c} required>
               <Input
                 type="date"
-                value={formData.checkInDate}
-                onChange={(e) => handleInputChange('checkInDate', e.target.value)}
-                className={errors.checkInDate ? 'border-red-500' : ''}
+                value={formData.checkInDate_c}
+                onChange={(e) => handleInputChange('checkInDate_c', e.target.value)}
+                className={errors.checkInDate_c ? 'border-red-500' : ''}
               />
             </FormField>
 <FormField label="Check-out Date" error={errors.checkOutDate_c} required>
@@ -267,42 +267,42 @@ guestId_c: '',
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField label="Adults" error={errors.adults} required>
+<FormField label="Adults" error={errors.adults_c} required>
               <Input
                 type="number"
                 min="1"
-                value={formData.adults}
-                onChange={(e) => handleInputChange('adults', parseInt(e.target.value) || 1)}
-                className={errors.adults ? 'border-red-500' : ''}
+                value={formData.adults_c}
+                onChange={(e) => handleInputChange('adults_c', parseInt(e.target.value) || 1)}
+                className={errors.adults_c ? 'border-red-500' : ''}
               />
             </FormField>
             
-            <FormField label="Children">
+<FormField label="Children">
               <Input
                 type="number"
                 min="0"
-                value={formData.children}
-                onChange={(e) => handleInputChange('children', parseInt(e.target.value) || 0)}
+                value={formData.children_c}
+                onChange={(e) => handleInputChange('children_c', parseInt(e.target.value) || 0)}
               />
             </FormField>
             
-            <FormField label="Total Amount" error={errors.totalAmount}>
+<FormField label="Total Amount" error={errors.totalAmount_c}>
               <Input
                 type="number"
                 min="0"
                 step="0.01"
-                value={formData.totalAmount}
-                onChange={(e) => handleInputChange('totalAmount', parseFloat(e.target.value) || 0)}
+                value={formData.totalAmount_c}
+                onChange={(e) => handleInputChange('totalAmount_c', parseFloat(e.target.value) || 0)}
                 placeholder="0.00"
-                className={errors.totalAmount ? 'border-red-500' : ''}
+                className={errors.totalAmount_c ? 'border-red-500' : ''}
               />
             </FormField>
           </div>
           
           <FormField label="Special Requests">
-            <textarea
-              value={formData.specialRequests}
-              onChange={(e) => handleInputChange('specialRequests', e.target.value)}
+<textarea
+              value={formData.specialRequests_c}
+              onChange={(e) => handleInputChange('specialRequests_c', e.target.value)}
               placeholder="Any special requests or notes..."
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors duration-150 resize-none"
