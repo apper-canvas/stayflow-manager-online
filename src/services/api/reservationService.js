@@ -6,14 +6,14 @@ const reservationService = {
   async getAll() {
     try {
       const apperClient = getApperClient();
-      const response = await apperClient.fetchRecords('reservations_c', {
+const response = await apperClient.fetchRecords('reservations_c', {
         fields: [
           {"field": {"Name": "Name"}},
           {"field": {"Name": "guestName_c"}},
           {"field": {"Name": "roomNumber_c"}},
           {"field": {"Name": "roomType_c"}},
           {"field": {"Name": "checkInDate_c"}},
-{"field": {"Name": "checkOutDate_c"}},
+          {"field": {"Name": "checkOutDate_c"}},
           {"field": {"Name": "children_c"}},
           {"field": {"Name": "adults_c"}},
           {"field": {"Name": "totalAmount_c"}},
@@ -21,11 +21,7 @@ const reservationService = {
           {"field": {"Name": "status_c"}},
           {"field": {"Name": "paymentStatus_c"}},
           {"field": {"Name": "guestId_c"}, "referenceField": {"field": {"Name": "Name"}}},
-          {"field": {"Name": "totalAmount_c"}},
-          {"field": {"Name": "specialRequests_c"}},
-          {"field": {"Name": "status_c"}},
-          {"field": {"Name": "paymentStatus_c"}},
-{"field": {"Name": "roomId_c"}, "referenceField": {"field": {"Name": "Name"}}}
+          {"field": {"Name": "roomId_c"}, "referenceField": {"field": {"Name": "Name"}}}
         ]
       });
 
@@ -50,25 +46,21 @@ const reservationService = {
     try {
       const apperClient = getApperClient();
       const response = await apperClient.getRecordById('reservations_c', id, {
-        fields: [
+fields: [
           {"field": {"Name": "Name"}},
           {"field": {"Name": "guestName_c"}},
           {"field": {"Name": "roomNumber_c"}},
           {"field": {"Name": "roomType_c"}},
           {"field": {"Name": "checkInDate_c"}},
           {"field": {"Name": "checkOutDate_c"}},
-{"field": {"Name": "children_c"}},
+          {"field": {"Name": "children_c"}},
           {"field": {"Name": "adults_c"}},
           {"field": {"Name": "totalAmount_c"}},
           {"field": {"Name": "specialRequests_c"}},
           {"field": {"Name": "status_c"}},
           {"field": {"Name": "paymentStatus_c"}},
           {"field": {"Name": "guestId_c"}, "referenceField": {"field": {"Name": "Name"}}},
-          {"field": {"Name": "totalAmount_c"}},
-          {"field": {"Name": "specialRequests_c"}},
-          {"field": {"Name": "status_c"}},
-          {"field": {"Name": "paymentStatus_c"}},
-{"field": {"Name": "roomId_c"}, "referenceField": {"field": {"Name": "Name"}}}
+          {"field": {"Name": "roomId_c"}, "referenceField": {"field": {"Name": "Name"}}}
         ]
       });
 
@@ -131,10 +123,14 @@ const response = await apperClient.createRecord('reservations_c', {
             if (record.message) toast.error(record.message);
           });
         }
-        return successful.length > 0 ? successful[0].data : null;
+if (successful.length > 0) {
+          // Fetch the updated record to ensure we have the latest data
+          const updatedRecord = await this.getById(successful[0].data.Id);
+          return updatedRecord;
+        }
       }
       
-      return response.data;
+      return null;
     } catch (error) {
       console.error("Error creating reservation:", error?.response?.data?.message || error);
       return null;

@@ -151,11 +151,13 @@ const updatedReservation = await reservationService.update(reservation.Id, {
         status_c: formData.status_c,
         paymentStatus_c: formData.paymentStatus_c
       });
-      
-      if (updatedReservation) {
+if (updatedReservation) {
         toast.success('Reservation updated successfully');
+        // Pass the updated reservation to trigger refresh
         onUpdate(updatedReservation);
         onClose();
+      } else {
+        toast.error('Update appeared successful but no data returned');
       }
     } catch (error) {
       console.error('Error updating reservation:', error);

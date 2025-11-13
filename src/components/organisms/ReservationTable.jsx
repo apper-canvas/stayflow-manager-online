@@ -101,8 +101,9 @@ const updatedData = { status_c: "checkedout" };
     setSelectedReservation(null);
   };
 
-  const handleReservationUpdate = (updatedReservation) => {
-    setReservations(reservations.map(r => r.Id === updatedReservation.Id ? updatedReservation : r));
+const handleReservationUpdate = async (updatedReservation) => {
+    // Force a complete refresh to ensure we have the latest data from server
+    await loadReservations();
   };
 
   if (loading) return <Loading />;
