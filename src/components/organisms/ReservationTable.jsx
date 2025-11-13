@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
-import PaymentStatusModal from "@/components/organisms/PaymentStatusModal";
 import reservationService from "@/services/api/reservationService";
 import ApperIcon from "@/components/ApperIcon";
 import StatusBadge from "@/components/molecules/StatusBadge";
@@ -17,7 +16,7 @@ const [reservations, setReservations] = useState([]);
 const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+const [updatingPayment, setUpdatingPayment] = useState(null);
   const [selectedReservation, setSelectedReservation] = useState(null);
 
   const loadReservations = async () => {
@@ -49,18 +48,21 @@ toast.error("Failed to update reservation status");
     }
   };
 
-  const handlePaymentStatusClick = (reservation) => {
-    setSelectedReservation(reservation);
-    setPaymentModalOpen(true);
-  };
-
-  const handlePaymentUpdate = (updatedReservation) => {
-    setReservations(reservations.map(r => 
-      r.Id === updatedReservation.Id ? updatedReservation : r
-    ));
-    setPaymentModalOpen(false);
-    setSelectedReservation(null);
-    toast.success("Payment status updated successfully");
+const handlePaymentStatusChange = async (reservation, newStatus) => {
+    try {
+      setUpdatingPayment(reservation.Id);
+      const updatedReservation = await reservationService.update(reservation.Id, {
+        paymentStatus_c: newStatus
+      });
+      setReservations(reservations.map(r => 
+        r.Id === reservation.Id ? { ...r, paymentStatus_c: newStatus } : r
+      ));
+      toast.success("Payment status updated successfully");
+    } catch (error) {
+      toast.error("Failed to update payment status");
+    } finally {
+      setUpdatingPayment(null);
+    }
   };
 
 const handleCheckIn = async (reservation) => {
@@ -211,18 +213,18 @@ filteredReservations = filteredReservations.filter(r =>
                 </td>
 
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <button
-                    onClick={() => handlePaymentStatusClick(reservation)}
-                    className="transition-transform hover:scale-105"
-                  >
-                    <StatusBadge 
-                      status={reservation.paymentStatus_c || 'Unpaid'}
-                      variant={
-                        reservation.paymentStatus_c === 'Paid' ? 'success' :
-                        reservation.paymentStatus_c === 'Partial' ? 'warning' : 'error'
-                      }
-                    />
-                  </button>
+<div className="w-32">
+                    <Select
+                      value={reservation.paymentStatus_c || 'Unpaid'}
+                      onChange={(e) => handlePaymentStatusChange(reservation, e.target.value)}
+                      disabled={updatingPayment === reservation.Id}
+                      className="text-sm"
+                    >
+                      <option value="Unpaid">Unpaid</option>
+                      <option value="Partial">Partial</option>
+                      <option value="Paid">Paid</option>
+                    </Select>
+                  </div>
                 </td>
                 
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -284,17 +286,6 @@ onClose={handleEditModalClose}
         onUpdate={handleReservationUpdate}
       />
 
-      {paymentModalOpen && (
-        <PaymentStatusModal
-          reservation={selectedReservation}
-          isOpen={paymentModalOpen}
-          onClose={() => {
-            setPaymentModalOpen(false);
-            setSelectedReservation(null);
-          }}
-          onUpdate={handlePaymentUpdate}
-        />
-      )}
     </div>
   );
 };
