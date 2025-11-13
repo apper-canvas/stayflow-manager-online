@@ -6,14 +6,15 @@ import reservationService from "@/services/api/reservationService";
 import guestService from "@/services/api/guestService";
 import roomService from "@/services/api/roomService";
 import ApperIcon from "@/components/ApperIcon";
+import FormField from "@/components/molecules/FormField";
 import Loading from "@/components/ui/Loading";
-import Guests from "@/components/pages/Guests";
 import Reservations from "@/components/pages/Reservations";
+import Guests from "@/components/pages/Guests";
 import GuestProfileEditor from "@/components/organisms/GuestProfileEditor";
+import Select from "@/components/atoms/Select";
+import Button from "@/components/atoms/Button";
 import SearchableSelect from "@/components/atoms/SearchableSelect";
 import Input from "@/components/atoms/Input";
-import Button from "@/components/atoms/Button";
-import Select from "@/components/atoms/Select";
 
 const NewReservation = () => {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ const [loading, setLoading] = useState(false);
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [guestModalLoading, setGuestModalLoading] = useState(false);
   
-  const [formData, setFormData] = useState({
+const [formData, setFormData] = useState({
 guestId_c: "",
     roomId_c: "",
     checkInDate: "",
@@ -33,7 +34,8 @@ guestId_c: "",
     children: 0,
     totalAmount: 0,
     specialRequests: "",
-    status: "pending"
+    status: "pending",
+    paymentStatus: "Unpaid"
   });
 
   const [formErrors, setFormErrors] = useState({});
@@ -171,7 +173,8 @@ setFormData(prev => ({ ...prev, guestId_c: createdGuest.Id }));
         roomId_c: parseInt(formData.roomId_c),
         adults: parseInt(formData.adults),
         children: parseInt(formData.children),
-        totalAmount: parseFloat(formData.totalAmount)
+        totalAmount: parseFloat(formData.totalAmount),
+        paymentStatus_c: formData.paymentStatus
       };
 
 await reservationService.create(reservationData);
@@ -353,9 +356,37 @@ className={formErrors.roomId_c ? "border-red-500" : ""}
           </div>
         </Card>
 
-        {/* Special Requests */}
+{/* Additional Information */}
         <Card className="p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Additional Information</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <FormField label="Status" required>
+              <Select
+                value={formData.status}
+                onChange={(e) => handleInputChange("status", e.target.value)}
+              >
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="checkedin">Checked In</option>
+                <option value="checkedout">Checked Out</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="noshow">No Show</option>
+              </Select>
+            </FormField>
+
+            <FormField label="Payment Status" required>
+              <Select
+                value={formData.paymentStatus}
+                onChange={(e) => handleInputChange("paymentStatus", e.target.value)}
+              >
+                <option value="Unpaid">Unpaid</option>
+                <option value="Partial">Partial</option>
+                <option value="Paid">Paid</option>
+              </Select>
+            </FormField>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Special Requests

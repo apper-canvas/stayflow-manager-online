@@ -20,7 +20,8 @@ const [formData, setFormData] = useState({
     children_c: 0,
     totalAmount_c: 0,
     specialRequests_c: '',
-    status_c: 'pending'
+    status_c: 'pending',
+    paymentStatus_c: 'Unpaid'
   });
   
   const [guests, setGuests] = useState([]);
@@ -61,7 +62,7 @@ const [formData, setFormData] = useState({
       loadData();
       
       setFormData({
-        guestId_c: reservation.guestId_c?.Id || reservation.guestId_c || '',
+guestId_c: reservation.guestId_c?.Id || reservation.guestId_c || '',
         roomId_c: reservation.roomId_c?.Id || reservation.roomId_c || '',
         checkInDate_c: formatDateForInput(reservation.checkInDate_c || reservation.checkInDate),
         checkOutDate_c: formatDateForInput(reservation.checkOutDate_c || reservation.checkOutDate),
@@ -69,7 +70,8 @@ const [formData, setFormData] = useState({
         children_c: reservation.children_c || reservation.children || 0,
         totalAmount_c: reservation.totalAmount_c || reservation.totalAmount || 0,
         specialRequests_c: reservation.specialRequests_c || reservation.specialRequests || '',
-        status_c: reservation.status_c || reservation.status || 'pending'
+        status_c: reservation.status_c || reservation.status || 'pending',
+        paymentStatus_c: reservation.paymentStatus_c || reservation.paymentStatus || 'Unpaid'
       });
     }
   }, [reservation, isOpen]);
@@ -143,7 +145,8 @@ guestId_c: parseInt(formData.guestId_c),
         children_c: parseInt(formData.children_c),
         totalAmount_c: parseFloat(formData.totalAmount_c),
         specialRequests_c: formData.specialRequests_c,
-        status_c: formData.status_c
+        status_c: formData.status_c,
+        paymentStatus_c: formData.paymentStatus_c
       });
       
       if (updatedReservation) {
@@ -169,7 +172,8 @@ setFormData({
       children_c: 0,
       totalAmount_c: 0,
       specialRequests_c: '',
-      status_c: 'pending'
+      status_c: 'pending',
+      paymentStatus_c: 'Unpaid'
     });
     setErrors({});
     onClose();
@@ -190,7 +194,7 @@ setFormData({
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+<form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 <FormField label="Guest" error={errors.guestId_c} required>
               <SearchableSelect
@@ -258,6 +262,16 @@ setFormData({
               />
             </FormField>
             
+            <FormField label="Payment Status" required>
+              <Select
+                value={formData.paymentStatus_c}
+                onChange={(e) => handleInputChange('paymentStatus_c', e.target.value)}
+              >
+                <option value="Unpaid">Unpaid</option>
+                <option value="Partial">Partial</option>
+                <option value="Paid">Paid</option>
+              </Select>
+            </FormField>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
