@@ -12,6 +12,7 @@ import Input from "@/components/atoms/Input";
 
 const EditReservationModal = ({ reservation, isOpen, onClose, onUpdate }) => {
 const [formData, setFormData] = useState({
+    Name: '',
     guestId_c: '',
     roomId_c: '',
     checkInDate_c: '',
@@ -57,12 +58,13 @@ const [formData, setFormData] = useState({
     }
   };
 
-  useEffect(() => {
+useEffect(() => {
     if (reservation && isOpen) {
       loadData();
       
       setFormData({
-guestId_c: reservation.guestId_c?.Id || reservation.guestId_c || '',
+        Name: reservation.Name || `Reservation ${reservation.Id}`,
+        guestId_c: reservation.guestId_c?.Id || reservation.guestId_c || '',
         roomId_c: reservation.roomId_c?.Id || reservation.roomId_c || '',
         checkInDate_c: formatDateForInput(reservation.checkInDate_c || reservation.checkInDate),
         checkOutDate_c: formatDateForInput(reservation.checkOutDate_c || reservation.checkOutDate),
@@ -137,7 +139,8 @@ if (formData.adults_c < 1) {
     
     try {
 const updatedReservation = await reservationService.update(reservation.Id, {
-guestId_c: parseInt(formData.guestId_c),
+        Name: formData.Name,
+        guestId_c: parseInt(formData.guestId_c),
         roomId_c: parseInt(formData.roomId_c),
         checkInDate_c: formData.checkInDate_c,
         checkOutDate_c: formData.checkOutDate_c,

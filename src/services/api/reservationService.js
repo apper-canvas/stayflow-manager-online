@@ -145,21 +145,19 @@ async update(id, updatedData) {
       const apperClient = getApperClient();
       
       // Filter only updateable fields
-      const updateableFields = {
+const updateableFields = {
         Id: parseInt(id),
         Name: updatedData.Name,
-        guestName_c: updatedData.guestName,
-        roomNumber_c: updatedData.roomNumber,
-        roomType_c: updatedData.roomType,
-        checkInDate_c: updatedData.checkInDate,
-checkOutDate_c: updatedData.checkOutDate,
-        children_c: updatedData.children ? parseInt(updatedData.children) : undefined,
-        guestId_c: updatedData.guestId ? parseInt(updatedData.guestId) : undefined,
-        totalAmount_c: updatedData.totalAmount ? parseFloat(updatedData.totalAmount) : undefined,
-        specialRequests_c: updatedData.specialRequests,
-        status_c: updatedData.status,
-        paymentStatus_c: updatedData.paymentStatus,
-        roomId_c: updatedData.roomId ? parseInt(updatedData.roomId) : undefined
+        checkInDate_c: updatedData.checkInDate_c,
+        checkOutDate_c: updatedData.checkOutDate_c,
+        adults_c: updatedData.adults_c ? parseInt(updatedData.adults_c) : undefined,
+        children_c: updatedData.children_c ? parseInt(updatedData.children_c) : undefined,
+        guestId_c: updatedData.guestId_c ? parseInt(updatedData.guestId_c) : undefined,
+        totalAmount_c: updatedData.totalAmount_c ? parseFloat(updatedData.totalAmount_c) : undefined,
+        specialRequests_c: updatedData.specialRequests_c,
+        status_c: updatedData.status_c,
+        paymentStatus_c: updatedData.paymentStatus_c,
+        roomId_c: updatedData.roomId_c ? parseInt(updatedData.roomId_c) : undefined
       };
       // Remove fields with null, undefined, or empty string values
       Object.keys(updateableFields).forEach(key => {
