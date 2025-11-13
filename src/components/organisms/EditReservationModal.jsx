@@ -43,15 +43,28 @@ const [formData, setFormData] = useState({
     }
   };
 
+// Helper function to format date for HTML date input
+  const formatDateForInput = (dateValue) => {
+    if (!dateValue) return '';
+    try {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return '';
+      // Return YYYY-MM-DD format for HTML date input
+      return date.toISOString().split('T')[0];
+    } catch (error) {
+      return '';
+    }
+  };
+
   useEffect(() => {
     if (reservation && isOpen) {
       loadData();
       
-setFormData({
+      setFormData({
         guestId_c: reservation.guestId_c?.Id || reservation.guestId_c || '',
         roomId_c: reservation.roomId_c?.Id || reservation.roomId_c || '',
-        checkInDate_c: reservation.checkInDate_c || reservation.checkInDate || '',
-        checkOutDate_c: reservation.checkOutDate_c || reservation.checkOutDate || '',
+        checkInDate_c: formatDateForInput(reservation.checkInDate_c || reservation.checkInDate),
+        checkOutDate_c: formatDateForInput(reservation.checkOutDate_c || reservation.checkOutDate),
         adults_c: reservation.adults_c || reservation.adults || 1,
         children_c: reservation.children_c || reservation.children || 0,
         totalAmount_c: reservation.totalAmount_c || reservation.totalAmount || 0,
