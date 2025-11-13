@@ -47,8 +47,18 @@ const guestService = {
           {"field": {"Name": "vipStatus_c"}},
           {"field": {"Name": "address_c"}},
           {"field": {"Name": "preferences_c"}},
+{"field": {"Name": "firstName_c"}},
+          {"field": {"Name": "lastName_c"}},
+          {"field": {"Name": "email_c"}},
+          {"field": {"Name": "phone_c"}},
+          {"field": {"Name": "idType_c"}},
+          {"field": {"Name": "idNumber_c"}},
+          {"field": {"Name": "vipStatus_c"}},
+          {"field": {"Name": "address_c"}},
+          {"field": {"Name": "preferences_c"}},
           {"field": {"Name": "allergies_c"}},
           {"field": {"Name": "stayNotes_c"}},
+          {"field": {"Name": "stayHistory_c"}},
           {"field": {"Name": "stayHistory_c"}}
         ]
       });
@@ -100,8 +110,18 @@ idNumber: guest.idNumber_c || '',
           {"field": {"Name": "vipStatus_c"}},
           {"field": {"Name": "address_c"}},
           {"field": {"Name": "preferences_c"}},
+{"field": {"Name": "firstName_c"}},
+          {"field": {"Name": "lastName_c"}},
+          {"field": {"Name": "email_c"}},
+          {"field": {"Name": "phone_c"}},
+          {"field": {"Name": "idType_c"}},
+          {"field": {"Name": "idNumber_c"}},
+          {"field": {"Name": "vipStatus_c"}},
+          {"field": {"Name": "address_c"}},
+          {"field": {"Name": "preferences_c"}},
           {"field": {"Name": "allergies_c"}},
           {"field": {"Name": "stayNotes_c"}},
+          {"field": {"Name": "stayHistory_c"}},
           {"field": {"Name": "stayHistory_c"}}
         ]
       });
