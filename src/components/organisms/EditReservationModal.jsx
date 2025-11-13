@@ -256,13 +256,12 @@ guestId_c: '',
                 className={errors.checkInDate ? 'border-red-500' : ''}
               />
             </FormField>
-            
-            <FormField label="Check-out Date" error={errors.checkOutDate} required>
+<FormField label="Check-out Date" error={errors.checkOutDate_c} required>
               <Input
                 type="date"
-                value={formData.checkOutDate}
-                onChange={(e) => handleInputChange('checkOutDate', e.target.value)}
-                className={errors.checkOutDate ? 'border-red-500' : ''}
+                value={formData.checkOutDate_c}
+                onChange={(e) => handleInputChange('checkOutDate_c', e.target.value)}
+                className={errors.checkOutDate_c ? 'border-red-500' : ''}
               />
             </FormField>
           </div>

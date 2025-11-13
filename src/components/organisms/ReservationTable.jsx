@@ -141,21 +141,21 @@ filteredReservations = filteredReservations.filter(r =>
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredReservations.map((reservation) => (
               <tr key={reservation.Id} className="hover:bg-gray-50 transition-colors duration-150">
-                <td className="px-6 py-4 whitespace-nowrap">
+<td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <div className="bg-primary/10 rounded-full p-2 mr-3">
                       <ApperIcon name="User" className="h-4 w-4 text-primary" />
                     </div>
                     <div>
-<div className="text-sm font-medium text-gray-900">
-                        {reservation.guestId_c?.Name || reservation.guestName_c || reservation.guestName}
+                      <div className="text-sm font-medium text-gray-900">
+                        {reservation.guestId_c?.Name || reservation.guestName_c || reservation.guestName || 'Unknown Guest'}
                       </div>
                       <div className="text-sm text-gray-500">
                         {reservation.adults_c || reservation.adults || 0} adults, {reservation.children_c || reservation.children || 0} children
                       </div>
                     </div>
                   </div>
-</td>
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <div className="bg-blue-100 rounded-full p-2 mr-3">
