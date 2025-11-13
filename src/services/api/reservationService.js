@@ -14,13 +14,13 @@ const reservationService = {
           {"field": {"Name": "roomType_c"}},
           {"field": {"Name": "checkInDate_c"}},
           {"field": {"Name": "checkOutDate_c"}},
-          {"field": {"Name": "adults_c"}},
-          {"field": {"Name": "children_c"}},
+{"field": {"Name": "children_c"}},
+          {"field": {"Name": "guestId_c"}, "referenceField": {"field": {"Name": "Name"}}},
           {"field": {"Name": "totalAmount_c"}},
           {"field": {"Name": "specialRequests_c"}},
           {"field": {"Name": "status_c"}},
-          {"field": {"Name": "guestId_c"}},
-          {"field": {"Name": "roomId_c"}}
+          {"field": {"Name": "paymentStatus_c"}},
+{"field": {"Name": "roomId_c"}, "referenceField": {"field": {"Name": "Name"}}}
         ]
       });
 
@@ -52,13 +52,13 @@ const reservationService = {
           {"field": {"Name": "roomType_c"}},
           {"field": {"Name": "checkInDate_c"}},
           {"field": {"Name": "checkOutDate_c"}},
-          {"field": {"Name": "adults_c"}},
-          {"field": {"Name": "children_c"}},
+{"field": {"Name": "children_c"}},
+          {"field": {"Name": "guestId_c"}, "referenceField": {"field": {"Name": "Name"}}},
           {"field": {"Name": "totalAmount_c"}},
           {"field": {"Name": "specialRequests_c"}},
           {"field": {"Name": "status_c"}},
-          {"field": {"Name": "guestId_c"}},
-          {"field": {"Name": "roomId_c"}}
+          {"field": {"Name": "paymentStatus_c"}},
+{"field": {"Name": "roomId_c"}, "referenceField": {"field": {"Name": "Name"}}}
         ]
       });
 
@@ -100,7 +100,6 @@ const reservationService = {
           delete updateableData[key];
         }
       });
-
 const response = await apperClient.createRecord('reservations_c', {
         records: [updateableData]
       });
@@ -131,7 +130,6 @@ const response = await apperClient.createRecord('reservations_c', {
       return null;
     }
   },
-
 async update(id, updatedData) {
     try {
       const apperClient = getApperClient();
@@ -144,16 +142,15 @@ async update(id, updatedData) {
         roomNumber_c: updatedData.roomNumber,
         roomType_c: updatedData.roomType,
         checkInDate_c: updatedData.checkInDate,
-        checkOutDate_c: updatedData.checkOutDate,
-        adults_c: updatedData.adults ? parseInt(updatedData.adults) : undefined,
+checkOutDate_c: updatedData.checkOutDate,
         children_c: updatedData.children ? parseInt(updatedData.children) : undefined,
+        guestId_c: updatedData.guestId ? parseInt(updatedData.guestId) : undefined,
         totalAmount_c: updatedData.totalAmount ? parseFloat(updatedData.totalAmount) : undefined,
         specialRequests_c: updatedData.specialRequests,
         status_c: updatedData.status,
-        guestId_c: updatedData.guestId ? parseInt(updatedData.guestId) : undefined,
+        paymentStatus_c: updatedData.paymentStatus,
         roomId_c: updatedData.roomId ? parseInt(updatedData.roomId) : undefined
       };
-
       // Remove fields with null, undefined, or empty string values
       Object.keys(updateableFields).forEach(key => {
         if (updateableFields[key] === null || updateableFields[key] === undefined || updateableFields[key] === '') {

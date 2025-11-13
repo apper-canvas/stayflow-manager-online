@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
+import PaymentStatusModal from "@/components/organisms/PaymentStatusModal";
 import reservationService from "@/services/api/reservationService";
 import ApperIcon from "@/components/ApperIcon";
 import StatusBadge from "@/components/molecules/StatusBadge";
@@ -13,9 +14,10 @@ import Button from "@/components/atoms/Button";
 
 const ReservationTable = ({ statusFilter, searchQuery, refreshTrigger }) => {
 const [reservations, setReservations] = useState([]);
-  const [loading, setLoading] = useState(true);
+const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState(null);
 
   const loadReservations = async () => {
@@ -43,11 +45,25 @@ const result = await reservationService.update(reservation.Id, { status_c: newSt
         toast.success(`Reservation status updated to ${newStatus}`);
       }
     } catch (err) {
-      toast.error("Failed to update reservation status");
+toast.error("Failed to update reservation status");
     }
   };
 
-  const handleCheckIn = async (reservation) => {
+  const handlePaymentStatusClick = (reservation) => {
+    setSelectedReservation(reservation);
+    setPaymentModalOpen(true);
+  };
+
+  const handlePaymentUpdate = (updatedReservation) => {
+    setReservations(reservations.map(r => 
+      r.Id === updatedReservation.Id ? updatedReservation : r
+    ));
+    setPaymentModalOpen(false);
+    setSelectedReservation(null);
+    toast.success("Payment status updated successfully");
+  };
+
+const handleCheckIn = async (reservation) => {
     try {
 const updatedData = { status_c: "checkedin" };
       const result = await reservationService.update(reservation.Id, updatedData);
@@ -129,6 +145,11 @@ filteredReservations = filteredReservations.filter(r =>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Check Out
+<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Total Amount
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Payment Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
@@ -176,12 +197,34 @@ filteredReservations = filteredReservations.filter(r =>
                     ? format(new Date(reservation.checkInDate_c || reservation.checkIn), "MMM dd, yyyy")
                     : "N/A"}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {(reservation?.checkOutDate_c || reservation?.checkOut) && !isNaN(new Date(reservation.checkOutDate_c || reservation.checkOut).getTime()) 
                     ? format(new Date(reservation.checkOutDate_c || reservation.checkOut), "MMM dd, yyyy")
                     : "N/A"}
                 </td>
-<td className="px-6 py-4 whitespace-nowrap">
+                
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className="text-sm font-medium text-gray-900">
+                    ${(reservation.totalAmount_c || 0).toFixed(2)}
+                  </span>
+                </td>
+
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <button
+                    onClick={() => handlePaymentStatusClick(reservation)}
+                    className="transition-transform hover:scale-105"
+                  >
+                    <StatusBadge 
+                      status={reservation.paymentStatus_c || 'Unpaid'}
+                      variant={
+                        reservation.paymentStatus_c === 'Paid' ? 'success' :
+                        reservation.paymentStatus_c === 'Partial' ? 'warning' : 'error'
+                      }
+                    />
+                  </button>
+                </td>
+                
+                <td className="px-6 py-4 whitespace-nowrap">
                   <Select
                     value={reservation.status_c || reservation.status || 'pending'}
                     onChange={(e) => handleStatusChange(reservation, e.target.value)}
@@ -195,8 +238,9 @@ filteredReservations = filteredReservations.filter(r =>
                     <option value="noshow">No Show</option>
                   </Select>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-<div className="flex gap-2">
+                
+<td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div className="flex items-center space-x-2">
                     {(reservation.status_c || reservation.status) === "confirmed" && (
                       <Button
                         size="sm"
@@ -235,10 +279,22 @@ filteredReservations = filteredReservations.filter(r =>
       <EditReservationModal
         reservation={selectedReservation}
         isOpen={editModalOpen}
-        onClose={handleEditModalClose}
+onClose={handleEditModalClose}
         onUpdate={handleReservationUpdate}
       />
-</div>
+
+      {paymentModalOpen && (
+        <PaymentStatusModal
+          reservation={selectedReservation}
+          isOpen={paymentModalOpen}
+          onClose={() => {
+            setPaymentModalOpen(false);
+            setSelectedReservation(null);
+          }}
+          onUpdate={handlePaymentUpdate}
+        />
+      )}
+    </div>
   );
 };
 
