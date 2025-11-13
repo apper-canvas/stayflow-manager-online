@@ -14,14 +14,23 @@ const [statusFilter, setStatusFilter] = useState("all");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Refresh data when page becomes visible/active
-  useEffect(() => {
+useEffect(() => {
+    let wasHidden = false;
+    
     const handlePageFocus = () => {
-      setRefreshTrigger(prev => prev + 1);
+      // Only refresh if the window was actually out of focus (not just internal clicks)
+      if (wasHidden || !document.hasFocus()) {
+        setRefreshTrigger(prev => prev + 1);
+      }
     };
 
     const handleVisibilityChange = () => {
-      if (!document.hidden) {
+      if (document.hidden) {
+        wasHidden = true;
+      } else if (wasHidden) {
+        // Only refresh when returning from being hidden
         setRefreshTrigger(prev => prev + 1);
+        wasHidden = false;
       }
     };
 
