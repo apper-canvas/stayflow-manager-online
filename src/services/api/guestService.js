@@ -27,11 +27,10 @@ const safeJsonParse = (value, fallback) => {
       console.warn('Invalid JSON data, using fallback:', error.message);
       return fallback;
     }
-  }
+}
   
-return fallback;
+  return fallback;
 };
-
 const guestService = {
   async getAll() {
     try {
@@ -72,9 +71,9 @@ const guestService = {
         email: guest.email_c || '',
         phone: guest.phone_c || '',
         idType: guest.idType_c || '',
-        idNumber: guest.idNumber_c || '',
+idNumber: guest.idNumber_c || '',
         vipStatus: guest.vipStatus_c || false,
-address: safeJsonParse(guest.address_c, {}),
+        address: safeJsonParse(guest.address_c, {}),
         preferences: guest.preferences_c?.split(',') || [],
         allergies: guest.allergies_c || '',
         stayNotes: guest.stayNotes_c || '',
@@ -119,9 +118,9 @@ address: safeJsonParse(guest.address_c, {}),
         email: guest.email_c || '',
         phone: guest.phone_c || '',
         idType: guest.idType_c || '',
-        idNumber: guest.idNumber_c || '',
+idNumber: guest.idNumber_c || '',
         vipStatus: guest.vipStatus_c || false,
-address: safeJsonParse(guest.address_c, {}),
+        address: safeJsonParse(guest.address_c, {}),
         preferences: guest.preferences_c?.split(',') || [],
         allergies: guest.allergies_c || '',
         stayNotes: guest.stayNotes_c || '',
@@ -144,16 +143,15 @@ address: safeJsonParse(guest.address_c, {}),
         lastName_c: guestData.lastName || '',
         email_c: guestData.email || '',
         phone_c: guestData.phone || '',
-        idType_c: guestData.idType || '',
+idType_c: guestData.idType || '',
         idNumber_c: guestData.idNumber || '',
-        vipStatus_c: Boolean(guestData.vipStatus),
-        address_c: guestData.address ? JSON.stringify(guestData.address) : '',
-        preferences_c: Array.isArray(guestData.preferences) ? guestData.preferences.join(',') : '',
-        allergies_c: Array.isArray(guestData.allergies) ? guestData.allergies.join('\n') : (guestData.allergies || ''),
+        ...(guestData.preferences && Array.isArray(guestData.preferences) && guestData.preferences.length > 0 
+          ? { preferences_c: guestData.preferences.join(',') } 
+          : {}),
+        allergies_c: guestData.allergies || '',
         stayNotes_c: guestData.stayNotes || '',
         stayHistory_c: JSON.stringify(guestData.stayHistory || [])
       };
-
       // Remove fields with null, undefined, or empty string values
       Object.keys(updateableData).forEach(key => {
         if (updateableData[key] === null || updateableData[key] === undefined || updateableData[key] === '') {
@@ -174,11 +172,10 @@ address: safeJsonParse(guest.address_c, {}),
       if (response.results) {
         const successful = response.results.filter(r => r.success);
         const failed = response.results.filter(r => !r.success);
-        
-        if (failed.length > 0) {
-          console.error(`Failed to create ${failed.length} guests: ${JSON.stringify(failed)}`);
+if (failed.length > 0) {
+          console.error(`Failed to create ${failed.length} guests:`, failed);
           failed.forEach(record => {
-            record.errors?.forEach(error => toast.error(`${error.fieldLabel}: ${error}`));
+            record.errors?.forEach(error => toast.error(`${error.fieldLabel}: ${error.message}`));
             if (record.message) toast.error(record.message);
           });
         }
@@ -201,16 +198,15 @@ address: safeJsonParse(guest.address_c, {}),
         lastName_c: updatedData.lastName,
         email_c: updatedData.email,
         phone_c: updatedData.phone,
-        idType_c: updatedData.idType,
+idType_c: updatedData.idType,
         idNumber_c: updatedData.idNumber,
-        vipStatus_c: updatedData.vipStatus !== undefined ? Boolean(updatedData.vipStatus) : undefined,
-        address_c: updatedData.address ? JSON.stringify(updatedData.address) : undefined,
-        preferences_c: updatedData.preferences ? (Array.isArray(updatedData.preferences) ? updatedData.preferences.join(',') : updatedData.preferences) : undefined,
-        allergies_c: updatedData.allergies ? (Array.isArray(updatedData.allergies) ? updatedData.allergies.join('\n') : updatedData.allergies) : undefined,
-        stayNotes_c: updatedData.stayNotes,
+        ...(updatedData.preferences && Array.isArray(updatedData.preferences) && updatedData.preferences.length > 0 
+          ? { preferences_c: updatedData.preferences.join(',') } 
+          : {}),
+        allergies_c: updatedData.allergies || undefined,
+        stayNotes_c: updatedData.stayNotes || undefined,
         stayHistory_c: updatedData.stayHistory ? JSON.stringify(updatedData.stayHistory) : undefined
       };
-
       // Remove fields with null, undefined, or empty string values
       Object.keys(updateableFields).forEach(key => {
         if (updateableFields[key] === null || updateableFields[key] === undefined || updateableFields[key] === '') {
@@ -231,11 +227,10 @@ address: safeJsonParse(guest.address_c, {}),
       if (response.results) {
         const successful = response.results.filter(r => r.success);
         const failed = response.results.filter(r => !r.success);
-        
-        if (failed.length > 0) {
-          console.error(`Failed to update ${failed.length} guests: ${JSON.stringify(failed)}`);
+if (failed.length > 0) {
+          console.error(`Failed to update ${failed.length} guests:`, failed);
           failed.forEach(record => {
-            record.errors?.forEach(error => toast.error(`${error.fieldLabel}: ${error}`));
+            record.errors?.forEach(error => toast.error(`${error.fieldLabel}: ${error.message}`));
             if (record.message) toast.error(record.message);
           });
         }
