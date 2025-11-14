@@ -20,21 +20,21 @@
 }
 
 @layer components {
-  .btn-primary {
+.btn-primary {
     @apply bg-primary text-white px-4 py-2 rounded-lg font-medium 
-           hover:bg-blue-700 active:scale-98 transition-all duration-150 
+           hover:bg-blue-700 active:scale-95 transition-all duration-150 
            focus:outline-none focus:ring-2 focus:ring-primary/20;
   }
 
-  .btn-secondary {
+.btn-secondary {
     @apply bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium 
-           hover:bg-gray-200 active:scale-98 transition-all duration-150
+           hover:bg-gray-200 active:scale-95 transition-all duration-150
            focus:outline-none focus:ring-2 focus:ring-gray-200;
   }
 
-  .btn-accent {
+.btn-accent {
     @apply bg-accent text-white px-4 py-2 rounded-lg font-medium 
-           hover:bg-amber-600 active:scale-98 transition-all duration-150
+           hover:bg-amber-600 active:scale-95 transition-all duration-150
            focus:outline-none focus:ring-2 focus:ring-accent/20;
   }
 
