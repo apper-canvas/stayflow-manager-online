@@ -9,7 +9,7 @@ import Select from "@/components/atoms/Select";
 import Button from "@/components/atoms/Button";
 import SearchableSelect from "@/components/atoms/SearchableSelect";
 import Input from "@/components/atoms/Input";
-import Card from "@/components/atoms/Card";
+import { Card } from "@/components/atoms/Card";
 
 const EditReservationModal = ({ reservation, isOpen, onClose, onUpdate }) => {
 const [formData, setFormData] = useState({
