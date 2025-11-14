@@ -233,7 +233,9 @@ async update(id, updatedData) {
       // Filter only updateable fields and transform to database format
       const updateableFields = {
         Id: id,
+        Name: `${updatedData.firstName || ''} ${updatedData.lastName || ''}`.trim() || `Guest-${Date.now()}`,
         firstName_c: updatedData.firstName,
+        lastName_c: updatedData.lastName,
         email_c: updatedData.email,
         phone_c: updatedData.phone,
         idType_c: updatedData.idType,

@@ -61,26 +61,6 @@ setEditingGuest({
       gstNumberTaxId: '',
       designationJobTitle: ''
     });
-setEditingGuest({
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      address: '',
-      nationality: '',
-      dateOfBirth: '',
-      idType: '',
-      idNumber: '',
-      emergencyContactName: '',
-      emergencyContactPhone: '',
-      allergies: [],
-      stayNotes: '',
-      guestId: '',
-      guestType: '',
-      companyName: '',
-      gstNumberTaxId: '',
-      designationJobTitle: ''
-    });
     setIsEditorOpen(true);
   };
 
