@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "react-toastify";
 import ApperIcon from "@/components/ApperIcon";
 import RoomsGrid from "@/components/organisms/RoomsGrid";
 import Select from "@/components/atoms/Select";
