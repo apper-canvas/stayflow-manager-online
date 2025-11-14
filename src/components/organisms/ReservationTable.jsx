@@ -65,31 +65,6 @@ const handlePaymentStatusChange = async (reservation, newStatus) => {
     }
   };
 
-const handleCheckIn = async (reservation) => {
-    try {
-const updatedData = { status_c: "checkedin" };
-      const result = await reservationService.update(reservation.Id, updatedData);
-      if (result) {
-        setReservations(reservations.map(r => r.Id === reservation.Id ? { ...r, ...result } : r));
-        toast.success(`Guest ${reservation.guestId_c?.Name || reservation.guestName_c || reservation.guestName} checked in successfully`);
-      }
-    } catch (err) {
-      toast.error("Failed to check in guest");
-    }
-  };
-
-  const handleCheckOut = async (reservation) => {
-    try {
-const updatedData = { status_c: "checkedout" };
-      const result = await reservationService.update(reservation.Id, updatedData);
-      if (result) {
-        setReservations(reservations.map(r => r.Id === reservation.Id ? { ...r, ...result } : r));
-        toast.success(`Guest ${reservation.guestId_c?.Name || reservation.guestName_c || reservation.guestName} checked out successfully`);
-      }
-    } catch (err) {
-      toast.error("Failed to check out guest");
-    }
-  };
 
   const handleEdit = (reservation) => {
     setSelectedReservation(reservation);
@@ -245,25 +220,6 @@ return (
                 
 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center space-x-2">
-                    {(reservation.status_c || reservation.status) === "confirmed" && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleCheckIn(reservation)}
-                      >
-                        <ApperIcon name="LogIn" className="h-3 w-3 mr-1" />
-                        Check In
-                      </Button>
-                    )}
-                    {(reservation.status_c || reservation.status) === "checkedin" && (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => handleCheckOut(reservation)}
-                      >
-                        <ApperIcon name="LogOut" className="h-3 w-3 mr-1" />
-                        Check Out
-                      </Button>
-                    )}
                     <Button 
                       size="sm" 
                       variant="ghost"
