@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/atoms/Button';
-import { Input } from '@/components/atoms/Input';
+import Input from '@/components/atoms/Input';
 import { Select } from '@/components/atoms/Select';
 import { Badge } from '@/components/atoms/Badge';
 import ApperIcon from '@/components/ApperIcon';
