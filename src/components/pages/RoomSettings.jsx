@@ -3,7 +3,7 @@ import { toast } from 'react-toastify';
 import roomService from '@/services/api/roomService';
 import RoomForm from '@/components/organisms/RoomForm';
 import RoomList from '@/components/organisms/RoomList';
-import { Button } from '@/components/atoms/Button';
+import Button from '@/components/atoms/Button';
 import ApperIcon from '@/components/ApperIcon';
 import { Card } from '@/components/atoms/Card';
 
