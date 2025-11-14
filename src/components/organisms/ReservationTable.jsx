@@ -204,18 +204,17 @@ return (
                 </td>
                 
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <Select
-                    value={reservation.status_c || reservation.status || 'pending'}
-                    onChange={(e) => handleStatusChange(reservation, e.target.value)}
-                    className="min-w-[140px] text-sm"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="checkedin">Checked In</option>
-                    <option value="checkedout">Checked Out</option>
-                    <option value="cancelled">Cancelled</option>
-                    <option value="noshow">No Show</option>
-                  </Select>
+<StatusBadge 
+                    status={reservation.status_c || reservation.status || 'pending'}
+                    className="cursor-pointer hover:opacity-80 transition-opacity min-w-[100px]"
+                    onClick={() => {
+                      const statusOptions = ['pending', 'confirmed', 'checkedin', 'checkedout', 'cancelled', 'noshow'];
+                      const currentStatus = reservation.status_c || reservation.status || 'pending';
+                      const currentIndex = statusOptions.indexOf(currentStatus);
+                      const nextStatus = statusOptions[(currentIndex + 1) % statusOptions.length];
+                      handleStatusChange(reservation, nextStatus);
+                    }}
+                  />
                 </td>
                 
 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
