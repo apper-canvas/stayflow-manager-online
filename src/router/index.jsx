@@ -10,6 +10,7 @@ const Reservations = lazy(() => import("@/components/pages/Reservations"));
 const NewReservation = lazy(() => import("@/components/pages/NewReservation"));
 const NewInvoice = lazy(() => import("@/components/pages/NewInvoice"));
 const Rooms = lazy(() => import("@/components/pages/Rooms"));
+const RoomSettings = lazy(() => import("@/components/pages/RoomSettings"));
 const Guests = lazy(() => import("@/components/pages/Guests"));
 const Billing = lazy(() => import("@/components/pages/Billing"));
 const Housekeeping = lazy(() => import("@/components/pages/Housekeeping"));
@@ -92,7 +93,12 @@ const mainRoutes = [
   }),
   createRoute({
     path: "rooms",
-    element: <Rooms />
+element: <Rooms />
+  }),
+  createRoute({
+    path: 'room-settings',
+    element: <RoomSettings />,
+    title: 'Room Settings'
   }),
   createRoute({
     path: "guests",

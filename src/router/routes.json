@@ -62,6 +62,19 @@
         ]
       },
       "redirectOnDeny": "/login"
+}
+  },
+  "/room-settings": {
+    "allow": {
+      "when": {
+        "conditions": [
+          {
+            "label": "User must be authenticated to access room settings",
+            "rule": "authenticated"
+          }
+        ]
+      },
+      "redirectOnDeny": "/login"
     }
   },
   "/guests": {

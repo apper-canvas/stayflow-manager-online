@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import ApperIcon from "@/components/ApperIcon";
 import RoomsGrid from "@/components/organisms/RoomsGrid";
@@ -6,9 +7,9 @@ import Select from "@/components/atoms/Select";
 import Button from "@/components/atoms/Button";
 
 const Rooms = () => {
+  const navigate = useNavigate();
   const [selectedFloor, setSelectedFloor] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -17,7 +18,7 @@ const Rooms = () => {
           <h1 className="text-3xl font-bold text-gray-900">Rooms</h1>
           <p className="text-gray-600 mt-1">Manage room status and availability</p>
         </div>
-<Button onClick={() => toast.info('Room settings feature coming soon!')}>
+<Button onClick={() => navigate('/room-settings')}>
           <ApperIcon name="Settings" className="h-4 w-4 mr-2" />
           Room Settings
         </Button>
