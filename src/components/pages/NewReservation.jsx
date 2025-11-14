@@ -26,7 +26,7 @@ const [loading, setLoading] = useState(false);
   const [guestModalLoading, setGuestModalLoading] = useState(false);
   
 const [formData, setFormData] = useState({
-guestId_c: "",
+    guestId_c: "",
     roomId_c: "",
     checkInDate: "",
     checkOutDate: "",
@@ -35,7 +35,15 @@ guestId_c: "",
     totalAmount: 0,
     specialRequests: "",
     status: "pending",
-    paymentStatus: "Unpaid"
+    paymentStatus: "Unpaid",
+    reservation_id_c: "",
+    number_of_nights_c: 0,
+    tax_percentage_c: "5%",
+    service_charge_percentage_c: 10,
+    discount_type_c: "None",
+    discount_value_c: 0,
+    discount_reason_c: "",
+    services: []
   });
 
   const [formErrors, setFormErrors] = useState({});
@@ -64,9 +72,9 @@ setAvailableRooms(roomsData.filter(room => room.status === 'available'));
   // Calculate total amount when dates or room changes
 useEffect(() => {
     // Reset total amount to 0 by default
-    setFormData(prev => ({ ...prev, totalAmount: 0 }));
+    setFormData(prev => ({ ...prev, totalAmount: 0, number_of_nights_c: 0 }));
     
-    if (formData.checkInDate && formData.checkOutDate && formData.roomId) {
+    if (formData.checkInDate && formData.checkOutDate && formData.roomId_c) {
       const checkIn = new Date(formData.checkInDate);
       const checkOut = new Date(formData.checkOutDate);
       
@@ -76,23 +84,23 @@ useEffect(() => {
       }
       
       const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-      const roomId = parseInt(formData.roomId);
+      const roomId = parseInt(formData.roomId_c);
       const selectedRoom = rooms.find(room => room.Id === roomId);
       
       if (selectedRoom && nights > 0 && typeof selectedRoom.pricePerNight === 'number') {
         const total = nights * selectedRoom.pricePerNight;
         // Final safety check to ensure total is a valid number
         if (!isNaN(total) && isFinite(total)) {
-          setFormData(prev => ({ ...prev, totalAmount: total }));
+          setFormData(prev => ({ ...prev, totalAmount: total, number_of_nights_c: nights }));
         }
       }
-}
+    }
   }, [formData.checkInDate, formData.checkOutDate, formData.roomId_c, rooms]);
 
-  const validateForm = () => {
+const validateForm = () => {
     const errors = {};
 
-if (!formData.guestId_c) errors.guestId_c = "Please select a guest";
+    if (!formData.guestId_c) errors.guestId_c = "Please select a guest";
     if (!formData.roomId_c) errors.roomId_c = "Please select a room";
     if (!formData.checkInDate) errors.checkInDate = "Check-in date is required";
     if (!formData.checkOutDate) errors.checkOutDate = "Check-out date is required";
@@ -113,13 +121,17 @@ if (!formData.guestId_c) errors.guestId_c = "Please select a guest";
 
     if (formData.adults < 1) errors.adults = "At least 1 adult is required";
     if (formData.children < 0) errors.children = "Children count cannot be negative";
+    if (formData.service_charge_percentage_c < 0) errors.service_charge_percentage_c = "Service charge cannot be negative";
+    if (formData.discount_type_c !== 'None' && formData.discount_value_c <= 0) {
+      errors.discount_value_c = "Discount value must be greater than 0";
+    }
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
 const handleInputChange = (field, value) => {
-// Handle 'New Guest' option
+    // Handle 'New Guest' option
     if (field === "guestId_c" && value === "new-guest") {
       setShowGuestModal(true);
       return;
@@ -129,6 +141,46 @@ const handleInputChange = (field, value) => {
     if (formErrors[field]) {
       setFormErrors(prev => ({ ...prev, [field]: "" }));
     }
+  };
+
+  const generateReservationId = () => {
+    const year = new Date().getFullYear();
+    const randomNum = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+    return `RES-${year}-${randomNum}`;
+  };
+
+  const handleAddService = () => {
+    const newService = {
+      id: Date.now(),
+      serviceName: "",
+      quantity: 1,
+      pricePerUnit: 0,
+      total: 0
+    };
+    setFormData(prev => ({ ...prev, services: [...prev.services, newService] }));
+  };
+
+  const handleRemoveService = (serviceId) => {
+    setFormData(prev => ({
+      ...prev,
+      services: prev.services.filter(s => s.id !== serviceId)
+    }));
+  };
+
+  const handleServiceChange = (serviceId, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      services: prev.services.map(s => {
+        if (s.id === serviceId) {
+          const updated = { ...s, [field]: value };
+          if (field === 'quantity' || field === 'pricePerUnit') {
+            updated.total = (parseFloat(updated.quantity) || 0) * (parseFloat(updated.pricePerUnit) || 0);
+          }
+          return updated;
+        }
+        return s;
+      })
+    }));
   };
 
   const handleNewGuestSave = async (newGuestData) => {
@@ -156,7 +208,7 @@ setFormData(prev => ({ ...prev, guestId_c: createdGuest.Id }));
     setShowGuestModal(false);
   };
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) {
@@ -166,15 +218,24 @@ setFormData(prev => ({ ...prev, guestId_c: createdGuest.Id }));
 
     try {
       setLoading(true);
+
+      const reservationId = formData.reservation_id_c || generateReservationId();
       
       const reservationData = {
-...formData,
+        ...formData,
+        reservation_id_c: reservationId,
         guestId_c: parseInt(formData.guestId_c),
         roomId_c: parseInt(formData.roomId_c),
         adults: parseInt(formData.adults),
         children: parseInt(formData.children),
         totalAmount: parseFloat(formData.totalAmount),
-        paymentStatus_c: formData.paymentStatus
+        paymentStatus_c: formData.paymentStatus,
+        number_of_nights_c: parseInt(formData.number_of_nights_c),
+        tax_percentage_c: formData.tax_percentage_c,
+        service_charge_percentage_c: parseFloat(formData.service_charge_percentage_c),
+        discount_type_c: formData.discount_type_c,
+        discount_value_c: parseFloat(formData.discount_value_c),
+        discount_reason_c: formData.discount_reason_c
       };
 
 await reservationService.create(reservationData);
@@ -189,6 +250,9 @@ await reservationService.create(reservationData);
 
 const selectedRoom = rooms.find(room => room.Id === parseInt(formData.roomId_c));
   const selectedGuest = guests.find(guest => guest.Id === parseInt(formData.guestId_c));
+
+  const taxPercentageOptions = ['5%', '10%', '12%', '18%', 'Custom'];
+  const serviceNameOptions = ['Minibar', 'Laundry', 'Room Service', 'Spa', 'Parking', 'Extra Bed', 'Airport Transfer', 'Other'];
 
   if (loading && guests.length === 0) {
     return (
@@ -290,6 +354,21 @@ className={formErrors.roomId_c ? "border-red-500" : ""}
           </div>
         </Card>
 
+{/* Reservation ID */}
+        <FormField
+          label="Reservation ID"
+          error={formErrors.reservation_id_c}
+        >
+          <Input
+            type="text"
+            value={formData.reservation_id_c || generateReservationId()}
+            readOnly
+            className="bg-gray-50 cursor-not-allowed"
+            disabled
+          />
+          <p className="text-xs text-gray-500 mt-1">Auto-generated format: RES-YYYY-XXXX</p>
+        </FormField>
+
         {/* Dates & Occupancy */}
         <Card className="p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Stay Details</h2>
@@ -355,6 +434,177 @@ className={formErrors.roomId_c ? "border-red-500" : ""}
             </div>
           </div>
         </Card>
+{/* Number of Nights */}
+        <FormField label="Number of Nights" error={formErrors.number_of_nights_c}>
+          <Input
+            type="number"
+            value={formData.number_of_nights_c}
+            readOnly
+            className="bg-gray-50 cursor-not-allowed"
+            disabled
+          />
+          <p className="text-xs text-gray-500 mt-1">Auto-calculated from check-in and check-out dates</p>
+        </FormField>
+
+        {/* Tax & Service Charges Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            label="Tax Percentage"
+            error={formErrors.tax_percentage_c}
+          >
+            {formData.tax_percentage_c === 'Custom' ? (
+              <Input
+                type="number"
+                placeholder="Enter custom tax %"
+                value={formData.tax_percentage_c === 'Custom' ? '' : formData.tax_percentage_c}
+                onChange={(e) => handleInputChange('tax_percentage_c', parseFloat(e.target.value) || 0)}
+                step="0.01"
+              />
+            ) : (
+              <Select
+                value={formData.tax_percentage_c}
+                onChange={(e) => handleInputChange('tax_percentage_c', e.target.value)}
+              >
+                <option value="">Select Tax Percentage</option>
+                {taxPercentageOptions.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </Select>
+            )}
+          </FormField>
+
+          <FormField
+            label="Service Charge Percentage"
+            error={formErrors.service_charge_percentage_c}
+          >
+            <Input
+              type="number"
+              placeholder="Enter service charge %"
+              value={formData.service_charge_percentage_c}
+              onChange={(e) => handleInputChange('service_charge_percentage_c', parseFloat(e.target.value) || 0)}
+              step="0.01"
+              min="0"
+            />
+            <p className="text-xs text-gray-500 mt-1">Default: 10%</p>
+          </FormField>
+        </div>
+
+        {/* Discount Section */}
+        <Card className="p-6 bg-blue-50 border border-blue-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Discount Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <FormField
+              label="Discount Type"
+              error={formErrors.discount_type_c}
+            >
+              <Select
+                value={formData.discount_type_c}
+                onChange={(e) => handleInputChange('discount_type_c', e.target.value)}
+              >
+                <option value="None">None</option>
+                <option value="Percentage">Percentage</option>
+                <option value="Fixed Amount">Fixed Amount</option>
+              </Select>
+            </FormField>
+
+            {formData.discount_type_c !== 'None' && (
+              <FormField
+                label="Discount Value"
+                error={formErrors.discount_value_c}
+              >
+                <Input
+                  type="number"
+                  placeholder="Enter discount value"
+                  value={formData.discount_value_c}
+                  onChange={(e) => handleInputChange('discount_value_c', parseFloat(e.target.value) || 0)}
+                  step="0.01"
+                  min="0"
+                />
+              </FormField>
+            )}
+
+            {formData.discount_type_c !== 'None' && (
+              <FormField label="Discount Reason">
+                <Input
+                  type="text"
+                  placeholder="Enter discount reason"
+                  value={formData.discount_reason_c}
+                  onChange={(e) => handleInputChange('discount_reason_c', e.target.value)}
+                />
+              </FormField>
+            )}
+          </div>
+        </Card>
+
+        {/* Additional Services Section */}
+        <Card className="p-6 bg-amber-50 border border-amber-200">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Additional Services</h3>
+            <Button
+              type="button"
+              onClick={handleAddService}
+              className="flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-lg hover:bg-amber-600"
+            >
+              <ApperIcon name="Plus" size={18} />
+              Add Service
+            </Button>
+          </div>
+
+          {formData.services.length > 0 ? (
+            <div className="space-y-3">
+              {formData.services.map((service, idx) => (
+                <div key={service.id} className="flex gap-3 items-end bg-white p-4 rounded-lg border border-amber-200">
+                  <FormField label="Service Name" className="flex-1">
+                    <Select
+                      value={service.serviceName}
+                      onChange={(e) => handleServiceChange(service.id, 'serviceName', e.target.value)}
+                    >
+                      <option value="">Select Service</option>
+                      {serviceNameOptions.map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </Select>
+                  </FormField>
+                  <FormField label="Quantity" className="w-20">
+                    <Input
+                      type="number"
+                      value={service.quantity}
+                      onChange={(e) => handleServiceChange(service.id, 'quantity', parseInt(e.target.value) || 0)}
+                      min="1"
+                    />
+                  </FormField>
+                  <FormField label="Price/Unit" className="w-24">
+                    <Input
+                      type="number"
+                      value={service.pricePerUnit}
+                      onChange={(e) => handleServiceChange(service.id, 'pricePerUnit', parseFloat(e.target.value) || 0)}
+                      step="0.01"
+                      min="0"
+                    />
+                  </FormField>
+                  <FormField label="Total" className="w-24">
+                    <Input
+                      type="number"
+                      value={service.total}
+                      readOnly
+                      disabled
+                      className="bg-gray-50"
+                    />
+                  </FormField>
+                  <Button
+                    type="button"
+                    onClick={() => handleRemoveService(service.id)}
+                    className="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600"
+                  >
+                    <ApperIcon name="Trash2" size={18} />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center py-4">No services added yet</p>
+          )}
+        </Card>
 
 {/* Additional Information */}
         <Card className="p-6">
@@ -401,26 +651,34 @@ className={formErrors.roomId_c ? "border-red-500" : ""}
           </div>
         </Card>
 
-        {/* Booking Summary */}
+{/* Booking Summary */}
         {selectedRoom && formData.checkInDate && formData.checkOutDate && (
           <Card className="p-6 bg-gray-50">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Booking Summary</h2>
             <div className="space-y-3">
               <div className="flex justify-between">
+                <span className="text-gray-600">Reservation ID:</span>
+                <span className="font-medium">{formData.reservation_id_c || generateReservationId()}</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-gray-600">Guest:</span>
                 <span className="font-medium">
-{selectedGuest ? `${selectedGuest.firstName_c || selectedGuest.Name} ${selectedGuest.lastName_c || ''}` : 'Not selected'}
+                  {selectedGuest ? `${selectedGuest.firstName_c || selectedGuest.Name} ${selectedGuest.lastName_c || ''}` : 'Not selected'}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Room:</span>
-<span className="font-medium">Room {selectedRoom.number_c || selectedRoom.number} - {selectedRoom.type_c || selectedRoom.type}</span>
+                <span className="font-medium">Room {selectedRoom.number_c || selectedRoom.number} - {selectedRoom.type_c || selectedRoom.type}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Dates:</span>
                 <span className="font-medium">
                   {formData.checkInDate} to {formData.checkOutDate}
                 </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Nights:</span>
+                <span className="font-medium">{formData.number_of_nights_c} night{formData.number_of_nights_c !== 1 ? 's' : ''}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Guests:</span>
@@ -430,9 +688,43 @@ className={formErrors.roomId_c ? "border-red-500" : ""}
                 </span>
               </div>
               <div className="border-t pt-3">
-                <div className="flex justify-between text-lg font-bold">
-                  <span>Total Amount:</span>
-                  <span>${formData.totalAmount.toFixed(2)}</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Room Total:</span>
+                  <span className="font-medium">${formData.totalAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Tax ({formData.tax_percentage_c}):</span>
+                  <span className="font-medium">
+                    ${(formData.totalAmount * (parseInt(formData.tax_percentage_c) || 5) / 100).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Service Charge ({formData.service_charge_percentage_c}%):</span>
+                  <span className="font-medium">
+                    ${(formData.totalAmount * (parseFloat(formData.service_charge_percentage_c) || 0) / 100).toFixed(2)}
+                  </span>
+                </div>
+                {formData.services.length > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Additional Services:</span>
+                    <span className="font-medium">
+                      ${formData.services.reduce((sum, s) => sum + (s.total || 0), 0).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                {formData.discount_type_c !== 'None' && (
+                  <div className="flex justify-between text-red-600">
+                    <span>Discount ({formData.discount_type_c}):</span>
+                    <span className="font-medium">
+                      -${formData.discount_value_c.toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                <div className="border-t pt-3 mt-3">
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total Amount:</span>
+                    <span>${formData.totalAmount.toFixed(2)}</span>
+                  </div>
                 </div>
               </div>
             </div>

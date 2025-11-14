@@ -21,7 +21,18 @@ const response = await apperClient.fetchRecords('reservations_c', {
           {"field": {"Name": "status_c"}},
           {"field": {"Name": "paymentStatus_c"}},
           {"field": {"Name": "guestId_c"}, "referenceField": {"field": {"Name": "Name"}}},
-          {"field": {"Name": "roomId_c"}, "referenceField": {"field": {"Name": "Name"}}}
+          {"field": {"Name": "roomId_c"}, "referenceField": {"field": {"Name": "Name"}}},
+          {"field": {"Name": "reservation_id_c"}},
+          {"field": {"Name": "number_of_nights_c"}},
+          {"field": {"Name": "tax_percentage_c"}},
+          {"field": {"Name": "service_charge_percentage_c"}},
+          {"field": {"Name": "discount_type_c"}},
+          {"field": {"Name": "discount_value_c"}},
+          {"field": {"Name": "discount_reason_c"}},
+          {"field": {"Name": "service_name_c"}},
+          {"field": {"Name": "quantity_c"}},
+          {"field": {"Name": "price_per_unit_c"}},
+          {"field": {"Name": "total_c"}}
         ]
       });
 
@@ -60,7 +71,18 @@ fields: [
           {"field": {"Name": "status_c"}},
           {"field": {"Name": "paymentStatus_c"}},
           {"field": {"Name": "guestId_c"}, "referenceField": {"field": {"Name": "Name"}}},
-          {"field": {"Name": "roomId_c"}, "referenceField": {"field": {"Name": "Name"}}}
+          {"field": {"Name": "roomId_c"}, "referenceField": {"field": {"Name": "Name"}}},
+          {"field": {"Name": "reservation_id_c"}},
+          {"field": {"Name": "number_of_nights_c"}},
+          {"field": {"Name": "tax_percentage_c"}},
+          {"field": {"Name": "service_charge_percentage_c"}},
+          {"field": {"Name": "discount_type_c"}},
+          {"field": {"Name": "discount_value_c"}},
+          {"field": {"Name": "discount_reason_c"}},
+          {"field": {"Name": "service_name_c"}},
+          {"field": {"Name": "quantity_c"}},
+          {"field": {"Name": "price_per_unit_c"}},
+          {"field": {"Name": "total_c"}}
         ]
       });
 
@@ -81,7 +103,7 @@ fields: [
       
       // Filter only updateable fields
       const updateableData = {
-        Name: reservationData.Name || `Reservation-${Date.now()}`,
+Name: reservationData.Name || `Reservation-${Date.now()}`,
         guestName_c: reservationData.guestName,
         roomNumber_c: reservationData.roomNumber,
         roomType_c: reservationData.roomType,
@@ -93,7 +115,18 @@ fields: [
         specialRequests_c: reservationData.specialRequests || '',
         status_c: reservationData.status || 'pending',
         guestId_c: reservationData.guestId ? parseInt(reservationData.guestId) : null,
-        roomId_c: reservationData.roomId ? parseInt(reservationData.roomId) : null
+        roomId_c: reservationData.roomId ? parseInt(reservationData.roomId) : null,
+        reservation_id_c: reservationData.reservation_id_c || '',
+        number_of_nights_c: reservationData.number_of_nights_c ? parseInt(reservationData.number_of_nights_c) : 0,
+        tax_percentage_c: reservationData.tax_percentage_c || '5%',
+        service_charge_percentage_c: reservationData.service_charge_percentage_c ? parseFloat(reservationData.service_charge_percentage_c) : 10,
+        discount_type_c: reservationData.discount_type_c || 'None',
+        discount_value_c: reservationData.discount_value_c ? parseFloat(reservationData.discount_value_c) : 0,
+        discount_reason_c: reservationData.discount_reason_c || '',
+        service_name_c: reservationData.service_name_c || '',
+        quantity_c: reservationData.quantity_c ? parseInt(reservationData.quantity_c) : 0,
+        price_per_unit_c: reservationData.price_per_unit_c ? parseFloat(reservationData.price_per_unit_c) : 0,
+        total_c: reservationData.total_c ? parseFloat(reservationData.total_c) : 0
       };
 
       // Remove fields with null, undefined, or empty string values
@@ -153,7 +186,18 @@ const updateableFields = {
         specialRequests_c: updatedData.specialRequests_c,
         status_c: updatedData.status_c,
         paymentStatus_c: updatedData.paymentStatus_c,
-        roomId_c: updatedData.roomId_c ? parseInt(updatedData.roomId_c) : undefined
+        roomId_c: updatedData.roomId_c ? parseInt(updatedData.roomId_c) : undefined,
+        reservation_id_c: updatedData.reservation_id_c,
+        number_of_nights_c: updatedData.number_of_nights_c ? parseInt(updatedData.number_of_nights_c) : undefined,
+        tax_percentage_c: updatedData.tax_percentage_c,
+        service_charge_percentage_c: updatedData.service_charge_percentage_c ? parseFloat(updatedData.service_charge_percentage_c) : undefined,
+        discount_type_c: updatedData.discount_type_c,
+        discount_value_c: updatedData.discount_value_c ? parseFloat(updatedData.discount_value_c) : undefined,
+        discount_reason_c: updatedData.discount_reason_c,
+        service_name_c: updatedData.service_name_c,
+        quantity_c: updatedData.quantity_c ? parseInt(updatedData.quantity_c) : undefined,
+        price_per_unit_c: updatedData.price_per_unit_c ? parseFloat(updatedData.price_per_unit_c) : undefined,
+        total_c: updatedData.total_c ? parseFloat(updatedData.total_c) : undefined
       };
       // Remove fields with null, undefined, or empty string values
       Object.keys(updateableFields).forEach(key => {

@@ -22,7 +22,15 @@ const [formData, setFormData] = useState({
     totalAmount_c: 0,
     specialRequests_c: '',
     status_c: 'pending',
-    paymentStatus_c: 'Unpaid'
+    paymentStatus_c: 'Unpaid',
+    reservation_id_c: '',
+    number_of_nights_c: 0,
+    tax_percentage_c: '5%',
+    service_charge_percentage_c: 10,
+    discount_type_c: 'None',
+    discount_value_c: 0,
+    discount_reason_c: '',
+    services: []
   });
   
   const [guests, setGuests] = useState([]);
@@ -59,7 +67,7 @@ const [formData, setFormData] = useState({
   };
 
 useEffect(() => {
-    if (reservation && isOpen) {
+if (reservation && isOpen) {
       loadData();
       
       setFormData({
@@ -73,7 +81,15 @@ useEffect(() => {
         totalAmount_c: reservation.totalAmount_c || reservation.totalAmount || 0,
         specialRequests_c: reservation.specialRequests_c || reservation.specialRequests || '',
         status_c: reservation.status_c || reservation.status || 'pending',
-        paymentStatus_c: reservation.paymentStatus_c || reservation.paymentStatus || 'Unpaid'
+        paymentStatus_c: reservation.paymentStatus_c || reservation.paymentStatus || 'Unpaid',
+        reservation_id_c: reservation.reservation_id_c || '',
+        number_of_nights_c: reservation.number_of_nights_c || 0,
+        tax_percentage_c: reservation.tax_percentage_c || '5%',
+        service_charge_percentage_c: reservation.service_charge_percentage_c || 10,
+        discount_type_c: reservation.discount_type_c || 'None',
+        discount_value_c: reservation.discount_value_c || 0,
+        discount_reason_c: reservation.discount_reason_c || '',
+        services: []
       });
     }
   }, [reservation, isOpen]);
@@ -92,9 +108,44 @@ const handleInputChange = (field, value) => {
     }
   };
 
-  const validateForm = () => {
+  const handleAddService = () => {
+    const newService = {
+      id: Date.now(),
+      serviceName: "",
+      quantity: 1,
+      pricePerUnit: 0,
+      total: 0
+    };
+    setFormData(prev => ({ ...prev, services: [...prev.services, newService] }));
+  };
+
+  const handleRemoveService = (serviceId) => {
+    setFormData(prev => ({
+      ...prev,
+      services: prev.services.filter(s => s.id !== serviceId)
+    }));
+  };
+
+  const handleServiceChange = (serviceId, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      services: prev.services.map(s => {
+        if (s.id === serviceId) {
+          const updated = { ...s, [field]: value };
+          if (field === 'quantity' || field === 'pricePerUnit') {
+            updated.total = (parseFloat(updated.quantity) || 0) * (parseFloat(updated.pricePerUnit) || 0);
+          }
+          return updated;
+        }
+        return s;
+      })
+    }));
+  };
+
+const validateForm = () => {
     const newErrors = {};
-if (!formData.guestId_c) {
+
+    if (!formData.guestId_c) {
       newErrors.guestId_c = 'Please select a guest';
     }
     
@@ -102,7 +153,7 @@ if (!formData.guestId_c) {
       newErrors.roomId_c = 'Please select a room';
     }
     
-if (!formData.checkInDate_c) {
+    if (!formData.checkInDate_c) {
       newErrors.checkInDate_c = 'Check-in date is required';
     }
     
@@ -110,18 +161,26 @@ if (!formData.checkInDate_c) {
       newErrors.checkOutDate_c = 'Check-out date is required';
     }
     
-if (formData.checkInDate_c && formData.checkOutDate_c) {
+    if (formData.checkInDate_c && formData.checkOutDate_c) {
       if (new Date(formData.checkInDate_c) >= new Date(formData.checkOutDate_c)) {
         newErrors.checkOutDate_c = 'Check-out date must be after check-in date';
       }
     }
     
-if (formData.adults_c < 1) {
+    if (formData.adults_c < 1) {
       newErrors.adults_c = 'At least 1 adult is required';
     }
     
     if (formData.totalAmount_c < 0) {
       newErrors.totalAmount_c = 'Total amount cannot be negative';
+    }
+
+    if (formData.service_charge_percentage_c < 0) {
+      newErrors.service_charge_percentage_c = 'Service charge cannot be negative';
+    }
+
+    if (formData.discount_type_c !== 'None' && formData.discount_value_c <= 0) {
+      newErrors.discount_value_c = 'Discount value must be greater than 0';
     }
     
     setErrors(newErrors);
@@ -149,7 +208,14 @@ const updatedReservation = await reservationService.update(reservation.Id, {
         totalAmount_c: parseFloat(formData.totalAmount_c),
         specialRequests_c: formData.specialRequests_c,
         status_c: formData.status_c,
-        paymentStatus_c: formData.paymentStatus_c
+        paymentStatus_c: formData.paymentStatus_c,
+        reservation_id_c: formData.reservation_id_c,
+        number_of_nights_c: parseInt(formData.number_of_nights_c),
+        tax_percentage_c: formData.tax_percentage_c,
+        service_charge_percentage_c: parseFloat(formData.service_charge_percentage_c),
+        discount_type_c: formData.discount_type_c,
+        discount_value_c: parseFloat(formData.discount_value_c),
+        discount_reason_c: formData.discount_reason_c
       });
 if (updatedReservation) {
         toast.success('Reservation updated successfully');
@@ -169,17 +235,26 @@ if (updatedReservation) {
 
   const handleClose = () => {
 setFormData({
-      guestId_c: '',
-      roomId_c: '',
-      checkInDate_c: '',
-      checkOutDate_c: '',
-      adults_c: 1,
-      children_c: 0,
-      totalAmount_c: 0,
-      specialRequests_c: '',
-      status_c: 'pending',
-      paymentStatus_c: 'Unpaid'
-    });
+        Name: '',
+        guestId_c: '',
+        roomId_c: '',
+        checkInDate_c: '',
+        checkOutDate_c: '',
+        adults_c: 1,
+        children_c: 0,
+        totalAmount_c: 0,
+        specialRequests_c: '',
+        status_c: 'pending',
+        paymentStatus_c: 'Unpaid',
+        reservation_id_c: '',
+        number_of_nights_c: 0,
+        tax_percentage_c: '5%',
+        service_charge_percentage_c: 10,
+        discount_type_c: 'None',
+        discount_value_c: 0,
+        discount_reason_c: '',
+        services: []
+      });
     setErrors({});
     onClose();
   };
