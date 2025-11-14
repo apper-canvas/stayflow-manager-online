@@ -530,12 +530,11 @@ const renderAllergies = () => (
                 <h2 className="text-xl font-semibold text-gray-900">
                   {isCreating ? 'Add New Guest' : 'Edit Guest Profile'}
                 </h2>
-                {!isCreating && (
+{!isCreating && (
                   <div className="space-y-1 mt-1">
                     <p className="text-sm text-gray-600">
                       {formData.firstName} {formData.lastName}
                     </p>
-)}
                   </div>
                 )}
               </div>
