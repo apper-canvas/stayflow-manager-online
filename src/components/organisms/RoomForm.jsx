@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Input from '@/components/atoms/Input';
-import { Button } from '@/components/atoms/Button';
+import Button from '@/components/atoms/Button';
 import Select from '@/components/atoms/Select';
 import ApperIcon from '@/components/ApperIcon';
 import { cn } from '@/utils/cn';
