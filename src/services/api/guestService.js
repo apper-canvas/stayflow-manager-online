@@ -32,7 +32,7 @@ const safeJsonParse = (value, fallback) => {
   return fallback;
 };
 const guestService = {
-  async getAll() {
+async getAll() {
     try {
       const apperClient = getApperClient();
       const response = await apperClient.fetchRecords('guests_c', {
@@ -49,9 +49,14 @@ const guestService = {
           {"field": {"Name": "preferences_c"}},
           {"field": {"Name": "allergies_c"}},
           {"field": {"Name": "stayNotes_c"}},
-          {"field": {"Name": "stayHistory_c"}}
+          {"field": {"Name": "stayHistory_c"}},
+          {"field": {"Name": "guest_id_c"}},
+          {"field": {"Name": "guest_type_c"}},
+{"field": {"Name": "designation_job_title_c"}}
         ]
       });
+
+      if (!response.success) {
 
       if (!response.success) {
         console.error("Error fetching guests:", response.message);
@@ -63,7 +68,7 @@ const guestService = {
         return [];
       }
 
-      // Transform data to match UI expectations
+// Transform data to match UI expectations
       return response.data.map(guest => ({
         ...guest,
         firstName: guest.firstName_c || '',
@@ -77,7 +82,12 @@ const guestService = {
         preferences: guest.preferences_c?.split(',') || [],
         allergies: guest.allergies_c ? guest.allergies_c.split('\n').filter(a => a.trim()) : [],
         stayNotes: guest.stayNotes_c || '',
-        stayHistory: safeJsonParse(guest.stayHistory_c, [])
+        stayHistory: safeJsonParse(guest.stayHistory_c, []),
+        guestId: guest.guest_id_c || '',
+        guestType: guest.guest_type_c || '',
+        companyName: guest.company_name_c || '',
+        gstNumberTaxId: guest.gst_number_tax_id_c || '',
+        designationJobTitle: guest.designation_job_title_c || ''
       }));
     } catch (error) {
       console.error("Error fetching guests:", error?.response?.data?.message || error);
@@ -89,7 +99,7 @@ const guestService = {
     try {
       const apperClient = getApperClient();
       const response = await apperClient.getRecordById('guests_c', id, {
-        fields: [
+fields: [
           {"field": {"Name": "Name"}},
           {"field": {"Name": "firstName_c"}},
           {"field": {"Name": "lastName_c"}},
@@ -102,15 +112,57 @@ const guestService = {
           {"field": {"Name": "preferences_c"}},
           {"field": {"Name": "allergies_c"}},
           {"field": {"Name": "stayNotes_c"}},
-          {"field": {"Name": "stayHistory_c"}}
+          {"field": {"Name": "stayHistory_c"}},
+          {"field": {"Name": "guest_id_c"}},
+          {"field": {"Name": "guest_type_c"}},
+          {"field": {"Name": "company_name_c"}},
+          {"field": {"Name": "gst_number_tax_id_c"}},
+          {"field": {"Name": "designation_job_title_c"}}
         ]
       });
+        fields: [
+{"field": {"Name": "Name"}},
+          {"field": {"Name": "firstName_c"}},
+          {"field": {"Name": "lastName_c"}},
+          {"field": {"Name": "email_c"}},
+          {"field": {"Name": "phone_c"}},
+          {"field": {"Name": "idType_c"}},
+          {"field": {"Name": "idNumber_c"}},
+          {"field": {"Name": "vipStatus_c"}},
+          {"field": {"Name": "address_c"}},
+          {"field": {"Name": "preferences_c"}},
+          {"field": {"Name": "allergies_c"}},
+          {"field": {"Name": "stayNotes_c"}},
+          {"field": {"Name": "stayHistory_c"}},
+          {"field": {"Name": "guest_id_c"}},
+          {"field": {"Name": "guest_type_c"}},
+          {"field": {"Name": "company_name_c"}},
+          {"field": {"Name": "gst_number_tax_id_c"}},
+          {"field": {"Name": "designation_job_title_c"}}
+{"field": {"Name": "Name"}},
+          {"field": {"Name": "firstName_c"}},
+          {"field": {"Name": "lastName_c"}},
+          {"field": {"Name": "email_c"}},
+          {"field": {"Name": "phone_c"}},
+          {"field": {"Name": "idType_c"}},
+          {"field": {"Name": "idNumber_c"}},
+          {"field": {"Name": "vipStatus_c"}},
+          {"field": {"Name": "address_c"}},
+          {"field": {"Name": "preferences_c"}},
+          {"field": {"Name": "allergies_c"}},
+          {"field": {"Name": "stayNotes_c"}},
+          {"field": {"Name": "stayHistory_c"}},
+          {"field": {"Name": "guest_id_c"}},
+          {"field": {"Name": "guest_type_c"}},
+          {"field": {"Name": "company_name_c"}},
+          {"field": {"Name": "gst_number_tax_id_c"}},
+          {"field": {"Name": "designation_job_title_c"}}
 
       if (!response?.data) {
         return null;
       }
 
-      const guest = response.data;
+const guest = response.data;
       return {
         ...guest,
         firstName: guest.firstName_c || '',
@@ -124,7 +176,12 @@ const guestService = {
         preferences: guest.preferences_c?.split(',') || [],
         allergies: guest.allergies_c ? guest.allergies_c.split('\n').filter(a => a.trim()) : [],
         stayNotes: guest.stayNotes_c || '',
-        stayHistory: safeJsonParse(guest.stayHistory_c, [])
+        stayHistory: safeJsonParse(guest.stayHistory_c, []),
+        guestId: guest.guest_id_c || '',
+        guestType: guest.guest_type_c || '',
+        companyName: guest.company_name_c || '',
+        gstNumberTaxId: guest.gst_number_tax_id_c || '',
+        designationJobTitle: guest.designation_job_title_c || ''
       };
     } catch (error) {
       console.error(`Error fetching guest ${id}:`, error?.response?.data?.message || error);
@@ -137,7 +194,7 @@ const guestService = {
       const apperClient = getApperClient();
       
       // Filter only updateable fields and transform to database format
-      const updateableData = {
+const updateableData = {
         Name: `${guestData.firstName || ''} ${guestData.lastName || ''}`.trim() || `Guest-${Date.now()}`,
         firstName_c: guestData.firstName || '',
         lastName_c: guestData.lastName || '',
@@ -145,7 +202,11 @@ const guestService = {
         phone_c: guestData.phone || '',
         idType_c: guestData.idType || '',
         idNumber_c: guestData.idNumber || '',
-        vipStatus_c: guestData.vipStatus || false
+        vipStatus_c: guestData.vipStatus || false,
+        guest_type_c: guestData.guestType || '',
+        company_name_c: guestData.companyName || '',
+        gst_number_tax_id_c: guestData.gstNumberTaxId || '',
+        designation_job_title_c: guestData.designationJobTitle || ''
       };
 
       // Handle preferences as comma-separated string
@@ -212,7 +273,7 @@ const guestService = {
       const apperClient = getApperClient();
       
       // Filter only updateable fields and transform to database format
-      const updateableFields = {
+const updateableFields = {
         Id: id,
         firstName_c: updatedData.firstName,
         lastName_c: updatedData.lastName,
@@ -220,7 +281,11 @@ const guestService = {
         phone_c: updatedData.phone,
         idType_c: updatedData.idType,
         idNumber_c: updatedData.idNumber,
-        vipStatus_c: updatedData.vipStatus
+        vipStatus_c: updatedData.vipStatus,
+        guest_type_c: updatedData.guestType,
+        company_name_c: updatedData.companyName,
+        gst_number_tax_id_c: updatedData.gstNumberTaxId,
+        designation_job_title_c: updatedData.designationJobTitle
       };
 
       // Handle preferences as comma-separated string

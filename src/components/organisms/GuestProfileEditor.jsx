@@ -1,20 +1,28 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/Card";
-import Button from "@/components/atoms/Button";
-import Input from "@/components/atoms/Input";
-import FormField from "@/components/molecules/FormField";
-import Badge from "@/components/atoms/Badge";
 import ApperIcon from "@/components/ApperIcon";
-
+import FormField from "@/components/molecules/FormField";
+import Select from "@/components/atoms/Select";
+import Button from "@/components/atoms/Button";
+import Badge from "@/components/atoms/Badge";
+import Input from "@/components/atoms/Input";
 const GuestProfileEditor = ({ guest, onSave, onClose }) => {
 const [activeTab, setActiveTab] = useState("basic");
-  const [formData, setFormData] = useState({
+const [formData, setFormData] = useState({
     ...(guest || {}),
     preferences: guest?.preferences || [],
     allergies: guest?.allergies || [],
     stayNotes: guest?.stayNotes || "",
-    address: guest?.address || {}
+    address: guest?.address || {},
+    guestId: guest?.guestId || '',
+    guestType: guest?.guestType || '',
+    companyName: guest?.companyName || '',
+    gstNumberTaxId: guest?.gstNumberTaxId || '',
+    designationJobTitle: guest?.designationJobTitle || ''
   });
+);
+
+  const [businessDetailsOpen, setBusinessDetailsOpen] = useState(false);
   
   const isCreating = !guest?.Id;
   const [errors, setErrors] = useState({});
@@ -26,7 +34,7 @@ const [activeTab, setActiveTab] = useState("basic");
     { id: "vip", label: "VIP & Notes", icon: "Star" }
   ];
 
-  const validateForm = () => {
+const validateForm = () => {
     const newErrors = {};
     
     if (!formData.firstName?.trim()) {
@@ -42,6 +50,13 @@ const [activeTab, setActiveTab] = useState("basic");
     }
     if (!formData.phone?.trim()) {
       newErrors.phone = "Phone number is required";
+    }
+
+    // Validate business details if Corporate guest
+    if (formData.guestType === 'Corporate') {
+      if (!formData.companyName?.trim()) {
+        newErrors.companyName = "Company name is required for Corporate guests";
+      }
     }
 
     setErrors(newErrors);
@@ -153,7 +168,7 @@ const handleRemoveAllergy = (index) => {
     }
   };
 
-  const renderBasicInfo = () => (
+const renderBasicInfo = () => (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
@@ -247,6 +262,55 @@ const handleRemoveAllergy = (index) => {
       </div>
     </div>
   );
+const renderBusinessDetails = () => (
+    <div className="space-y-4 bg-blue-50 rounded-lg p-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-900 mb-1">
+            Guest Type
+          </label>
+          <select
+            id="guestType"
+            value={formData.guestType}
+            onChange={(e) => handleInputChange("guestType", e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors duration-150"
+          >
+            <option value="">Select Guest Type</option>
+            <option value="Individual">Individual</option>
+            <option value="Corporate">Corporate</option>
+            <option value="Group">Group</option>
+            <option value="Travel Agent">Travel Agent</option>
+          </select>
+        </div>
+        <FormField
+          label="Designation/Job Title"
+          id="designationJobTitle"
+          value={formData.designationJobTitle}
+          onChange={(e) => handleInputChange("designationJobTitle", e.target.value)}
+        />
+      </div>
+
+      {formData.guestType === 'Corporate' && (
+        <div className="space-y-4 pt-4 border-t border-blue-200">
+          <FormField
+            label="Company Name"
+            id="companyName"
+            value={formData.companyName}
+            onChange={(e) => handleInputChange("companyName", e.target.value)}
+            error={errors.companyName}
+            required
+          />
+          <FormField
+            label="GST Number/Tax ID"
+            id="gstNumberTaxId"
+            value={formData.gstNumberTaxId}
+            onChange={(e) => handleInputChange("gstNumberTaxId", e.target.value)}
+          />
+        </div>
+      )}
+    </div>
+  );
+const renderPreferences = () => (
 
 const renderPreferences = () => (
     <div className="space-y-4">
@@ -459,32 +523,28 @@ const renderAllergies = () => (
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-<div className="bg-white rounded-xl shadow-modal w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl shadow-modal w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="flex flex-col h-full">
           {/* Header */}
-<div className="p-6 border-b border-gray-200">
+          <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
                   {isCreating ? 'Add New Guest' : 'Edit Guest Profile'}
                 </h2>
                 {!isCreating && (
-                  <p className="text-sm text-gray-600 mt-1">
-                    {formData.firstName} {formData.lastName}
-                  </p>
+                  <div className="space-y-1 mt-1">
+                    <p className="text-sm text-gray-600">
+                      {formData.firstName} {formData.lastName}
+                    </p>
+                    {formData.guestId && (
+                      <p className="text-xs text-gray-500">
+                        Guest ID: <span className="font-mono font-semibold">{formData.guestId}</span>
+                      </p>
+                    )}
+                  </div>
                 )}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <ApperIcon name="X" className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
 
           {/* Tab Navigation */}
           <div className="border-b border-gray-200">
