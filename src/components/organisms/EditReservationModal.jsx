@@ -9,6 +9,7 @@ import Select from "@/components/atoms/Select";
 import Button from "@/components/atoms/Button";
 import SearchableSelect from "@/components/atoms/SearchableSelect";
 import Input from "@/components/atoms/Input";
+import Card from "@/components/atoms/Card";
 
 const EditReservationModal = ({ reservation, isOpen, onClose, onUpdate }) => {
 const [formData, setFormData] = useState({
@@ -276,7 +277,7 @@ setFormData({
         
 <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-<FormField label="Guest" error={errors.guestId_c} required>
+            <FormField label="Guest" error={errors.guestId_c} required>
               <SearchableSelect
                 placeholder="Select a guest..."
                 value={formData.guestId_c}
@@ -301,7 +302,7 @@ setFormData({
               />
             </FormField>
             
-<FormField label="Status" required>
+            <FormField label="Status" required>
               <Select
                 value={formData.status_c}
                 onChange={(e) => handleInputChange('status_c', e.target.value)}
@@ -317,7 +318,7 @@ setFormData({
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-<FormField label="Room" error={errors.roomId_c} required>
+            <FormField label="Room" error={errors.roomId_c} required>
               <SearchableSelect
                 placeholder="Select a room..."
                 value={formData.roomId_c}
@@ -353,68 +354,279 @@ setFormData({
               </Select>
             </FormField>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-<FormField label="Check-in Date" error={errors.checkInDate_c} required>
-              <Input
-                type="date"
-                value={formData.checkInDate_c}
-                onChange={(e) => handleInputChange('checkInDate_c', e.target.value)}
-                className={errors.checkInDate_c ? 'border-red-500' : ''}
-              />
-            </FormField>
-<FormField label="Check-out Date" error={errors.checkOutDate_c} required>
-              <Input
-                type="date"
-                value={formData.checkOutDate_c}
-                onChange={(e) => handleInputChange('checkOutDate_c', e.target.value)}
-                className={errors.checkOutDate_c ? 'border-red-500' : ''}
-              />
-            </FormField>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-<FormField label="Adults" error={errors.adults_c} required>
-              <Input
-                type="number"
-                min="1"
-                value={formData.adults_c}
-                onChange={(e) => handleInputChange('adults_c', parseInt(e.target.value) || 1)}
-                className={errors.adults_c ? 'border-red-500' : ''}
-              />
-            </FormField>
-            
-<FormField label="Children">
-              <Input
-                type="number"
-                min="0"
-                value={formData.children_c}
-                onChange={(e) => handleInputChange('children_c', parseInt(e.target.value) || 0)}
-              />
-            </FormField>
-            
-<FormField label="Total Amount" error={errors.totalAmount_c}>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.totalAmount_c}
-                onChange={(e) => handleInputChange('totalAmount_c', parseFloat(e.target.value) || 0)}
-                placeholder="0.00"
-                className={errors.totalAmount_c ? 'border-red-500' : ''}
-              />
-            </FormField>
-          </div>
-          
-          <FormField label="Special Requests">
-<textarea
-              value={formData.specialRequests_c}
-              onChange={(e) => handleInputChange('specialRequests_c', e.target.value)}
-              placeholder="Any special requests or notes..."
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors duration-150 resize-none"
+
+          {/* Reservation ID */}
+          <FormField label="Reservation ID" error={errors.reservation_id_c}>
+            <Input
+              type="text"
+              value={formData.reservation_id_c || ''}
+              readOnly
+              className="bg-gray-50 cursor-not-allowed"
+              disabled
             />
+            <p className="text-xs text-gray-500 mt-1">Auto-generated format: RES-YYYY-XXXX</p>
           </FormField>
+
+          {/* Dates & Occupancy */}
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Stay Details</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Check-in Date *
+                </label>
+                <Input
+                  type="date"
+                  value={formData.checkInDate_c}
+                  onChange={(e) => handleInputChange('checkInDate_c', e.target.value)}
+                  className={errors.checkInDate_c ? 'border-red-500' : ''}
+                />
+                {errors.checkInDate_c && <p className="text-red-500 text-sm mt-1">{errors.checkInDate_c}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Check-out Date *
+                </label>
+                <Input
+                  type="date"
+                  value={formData.checkOutDate_c}
+                  onChange={(e) => handleInputChange('checkOutDate_c', e.target.value)}
+                  className={errors.checkOutDate_c ? 'border-red-500' : ''}
+                />
+                {errors.checkOutDate_c && <p className="text-red-500 text-sm mt-1">{errors.checkOutDate_c}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Adults *
+                </label>
+                <Select
+                  value={formData.adults_c}
+                  onChange={(e) => handleInputChange('adults_c', e.target.value)}
+                  className={errors.adults_c ? 'border-red-500' : ''}
+                >
+                  {[1, 2, 3, 4, 5, 6].map(num => (
+                    <option key={num} value={num}>{num} Adult{num > 1 ? 's' : ''}</option>
+                  ))}
+                </Select>
+                {errors.adults_c && <p className="text-red-500 text-sm mt-1">{errors.adults_c}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Children
+                </label>
+                <Select
+                  value={formData.children_c}
+                  onChange={(e) => handleInputChange('children_c', e.target.value)}
+                  className={errors.children_c ? 'border-red-500' : ''}
+                >
+                  {[0, 1, 2, 3, 4].map(num => (
+                    <option key={num} value={num}>{num} Child{num !== 1 ? 'ren' : ''}</option>
+                  ))}
+                </Select>
+                {errors.children_c && <p className="text-red-500 text-sm mt-1">{errors.children_c}</p>}
+              </div>
+            </div>
+          </Card>
+
+          {/* Number of Nights */}
+          <FormField label="Number of Nights" error={errors.number_of_nights_c}>
+            <Input
+              type="number"
+              value={formData.number_of_nights_c}
+              readOnly
+              className="bg-gray-50 cursor-not-allowed"
+              disabled
+            />
+            <p className="text-xs text-gray-500 mt-1">Auto-calculated from check-in and check-out dates</p>
+          </FormField>
+
+          {/* Tax & Service Charges Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              label="Tax Percentage"
+              error={errors.tax_percentage_c}
+            >
+              {formData.tax_percentage_c === 'Custom' ? (
+                <Input
+                  type="number"
+                  placeholder="Enter custom tax %"
+                  value={formData.tax_percentage_c === 'Custom' ? '' : formData.tax_percentage_c}
+                  onChange={(e) => handleInputChange('tax_percentage_c', parseFloat(e.target.value) || 0)}
+                  step="0.01"
+                />
+              ) : (
+                <Select
+                  value={formData.tax_percentage_c}
+                  onChange={(e) => handleInputChange('tax_percentage_c', e.target.value)}
+                >
+                  <option value="">Select Tax Percentage</option>
+                  <option value="5%">5%</option>
+                  <option value="10%">10%</option>
+                  <option value="12%">12%</option>
+                  <option value="18%">18%</option>
+                  <option value="Custom">Custom</option>
+                </Select>
+              )}
+            </FormField>
+
+            <FormField
+              label="Service Charge Percentage"
+              error={errors.service_charge_percentage_c}
+            >
+              <Input
+                type="number"
+                placeholder="Enter service charge %"
+                value={formData.service_charge_percentage_c}
+                onChange={(e) => handleInputChange('service_charge_percentage_c', parseFloat(e.target.value) || 0)}
+                step="0.01"
+                min="0"
+              />
+              <p className="text-xs text-gray-500 mt-1">Default: 10%</p>
+            </FormField>
+          </div>
+
+          {/* Discount Section */}
+          <Card className="p-6 bg-blue-50 border border-blue-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Discount Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                label="Discount Type"
+                error={errors.discount_type_c}
+              >
+                <Select
+                  value={formData.discount_type_c}
+                  onChange={(e) => handleInputChange('discount_type_c', e.target.value)}
+                >
+                  <option value="None">None</option>
+                  <option value="Percentage">Percentage</option>
+                  <option value="Fixed Amount">Fixed Amount</option>
+                </Select>
+              </FormField>
+
+              {formData.discount_type_c !== 'None' && (
+                <FormField
+                  label="Discount Value"
+                  error={errors.discount_value_c}
+                >
+                  <Input
+                    type="number"
+                    placeholder="Enter discount value"
+                    value={formData.discount_value_c}
+                    onChange={(e) => handleInputChange('discount_value_c', parseFloat(e.target.value) || 0)}
+                    step="0.01"
+                    min="0"
+                  />
+                </FormField>
+              )}
+
+              {formData.discount_type_c !== 'None' && (
+                <FormField label="Discount Reason">
+                  <Input
+                    type="text"
+                    placeholder="Enter discount reason"
+                    value={formData.discount_reason_c}
+                    onChange={(e) => handleInputChange('discount_reason_c', e.target.value)}
+                  />
+                </FormField>
+              )}
+            </div>
+          </Card>
+
+          {/* Additional Services Section */}
+          <Card className="p-6 bg-amber-50 border border-amber-200">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Additional Services</h3>
+              <Button
+                type="button"
+                onClick={handleAddService}
+                className="flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-lg hover:bg-amber-600"
+              >
+                <ApperIcon name="Plus" size={18} />
+                Add Service
+              </Button>
+            </div>
+
+            {formData.services.length > 0 ? (
+              <div className="space-y-3">
+                {formData.services.map((service, idx) => (
+                  <div key={service.id} className="flex gap-3 items-end bg-white p-4 rounded-lg border border-amber-200">
+                    <FormField label="Service Name" className="flex-1">
+                      <Select
+                        value={service.serviceName}
+                        onChange={(e) => handleServiceChange(service.id, 'serviceName', e.target.value)}
+                      >
+                        <option value="">Select Service</option>
+                        <option value="Minibar">Minibar</option>
+                        <option value="Laundry">Laundry</option>
+                        <option value="Room Service">Room Service</option>
+                        <option value="Spa">Spa</option>
+                        <option value="Parking">Parking</option>
+                        <option value="Extra Bed">Extra Bed</option>
+                        <option value="Airport Transfer">Airport Transfer</option>
+                        <option value="Other">Other</option>
+                      </Select>
+                    </FormField>
+                    <FormField label="Quantity" className="w-20">
+                      <Input
+                        type="number"
+                        value={service.quantity}
+                        onChange={(e) => handleServiceChange(service.id, 'quantity', parseInt(e.target.value) || 0)}
+                        min="1"
+                      />
+                    </FormField>
+                    <FormField label="Price/Unit" className="w-24">
+                      <Input
+                        type="number"
+                        value={service.pricePerUnit}
+                        onChange={(e) => handleServiceChange(service.id, 'pricePerUnit', parseFloat(e.target.value) || 0)}
+                        step="0.01"
+                        min="0"
+                      />
+                    </FormField>
+                    <FormField label="Total" className="w-24">
+                      <Input
+                        type="number"
+                        value={service.total}
+                        readOnly
+                        disabled
+                        className="bg-gray-50"
+                      />
+                    </FormField>
+                    <Button
+                      type="button"
+                      onClick={() => handleRemoveService(service.id)}
+                      className="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600"
+                    >
+                      <ApperIcon name="Trash2" size={18} />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-4">No services added yet</p>
+            )}
+          </Card>
+
+          {/* Additional Information */}
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Additional Information</h2>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Special Requests
+              </label>
+              <textarea
+                value={formData.specialRequests_c}
+                onChange={(e) => handleInputChange('specialRequests_c', e.target.value)}
+                placeholder="Any special requests or notes..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors duration-150"
+                rows="4"
+              />
+            </div>
+          </Card>
           
           <div className="flex gap-3 pt-4">
             <Button
