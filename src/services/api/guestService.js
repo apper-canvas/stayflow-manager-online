@@ -32,7 +32,7 @@ const safeJsonParse = (value, fallback) => {
   return fallback;
 };
 const guestService = {
-async getAll() {
+  async getAll() {
     try {
       const apperClient = getApperClient();
       const response = await apperClient.fetchRecords('guests_c', {
@@ -52,11 +52,9 @@ async getAll() {
           {"field": {"Name": "stayHistory_c"}},
           {"field": {"Name": "guest_id_c"}},
           {"field": {"Name": "guest_type_c"}},
-{"field": {"Name": "designation_job_title_c"}}
+          {"field": {"Name": "designation_job_title_c"}}
         ]
       });
-
-      if (!response.success) {
 
       if (!response.success) {
         console.error("Error fetching guests:", response.message);
@@ -68,8 +66,62 @@ async getAll() {
         return [];
       }
 
-// Transform data to match UI expectations
+      // Transform data to match UI expectations
       return response.data.map(guest => ({
+        ...guest,
+        firstName: guest.firstName_c || '',
+        lastName: guest.lastName_c || '',
+        email: guest.email_c || '',
+        phone: guest.phone_c || '',
+        idType: guest.idType_c || '',
+        idNumber: guest.idNumber_c || '',
+        vipStatus: guest.vipStatus_c || false,
+        address: safeJsonParse(guest.address_c, {}),
+        preferences: guest.preferences_c?.split(',') || [],
+        allergies: guest.allergies_c ? guest.allergies_c.split('\n').filter(a => a.trim()) : [],
+        stayNotes: guest.stayNotes_c || '',
+        stayHistory: safeJsonParse(guest.stayHistory_c, []),
+        guestId: guest.guest_id_c || '',
+        guestType: guest.guest_type_c || '',
+        designationJobTitle: guest.designation_job_title_c || ''
+      }));
+    } catch (error) {
+      console.error('Error fetching guests:', error);
+      return [];
+    }
+  },
+async getById(id) {
+    try {
+      const apperClient = getApperClient();
+      const response = await apperClient.getRecordById('guests_c', id, {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "firstName_c"}},
+          {"field": {"Name": "lastName_c"}},
+          {"field": {"Name": "email_c"}},
+          {"field": {"Name": "phone_c"}},
+          {"field": {"Name": "idType_c"}},
+          {"field": {"Name": "idNumber_c"}},
+          {"field": {"Name": "vipStatus_c"}},
+          {"field": {"Name": "address_c"}},
+          {"field": {"Name": "preferences_c"}},
+          {"field": {"Name": "allergies_c"}},
+          {"field": {"Name": "stayNotes_c"}},
+          {"field": {"Name": "stayHistory_c"}},
+          {"field": {"Name": "guest_id_c"}},
+          {"field": {"Name": "guest_type_c"}},
+          {"field": {"Name": "company_name_c"}},
+          {"field": {"Name": "gst_number_tax_id_c"}},
+          {"field": {"Name": "designation_job_title_c"}}
+        ]
+      });
+
+      if (!response?.data) {
+        return null;
+      }
+
+      const guest = response.data;
+      return {
         ...guest,
         firstName: guest.firstName_c || '',
         lastName: guest.lastName_c || '',
@@ -88,13 +140,12 @@ async getAll() {
         companyName: guest.company_name_c || '',
         gstNumberTaxId: guest.gst_number_tax_id_c || '',
         designationJobTitle: guest.designation_job_title_c || ''
-      }));
+      };
     } catch (error) {
-      console.error("Error fetching guests:", error?.response?.data?.message || error);
-      return [];
+      console.error(`Error fetching guest ${id}:`, error?.response?.data?.message || error);
+      return null;
     }
   },
-
   async getById(id) {
     try {
       const apperClient = getApperClient();
@@ -118,10 +169,9 @@ fields: [
           {"field": {"Name": "company_name_c"}},
           {"field": {"Name": "gst_number_tax_id_c"}},
           {"field": {"Name": "designation_job_title_c"}}
-        ]
-      });
+const params = {
         fields: [
-{"field": {"Name": "Name"}},
+          {"field": {"Name": "Name"}},
           {"field": {"Name": "firstName_c"}},
           {"field": {"Name": "lastName_c"}},
           {"field": {"Name": "email_c"}},
@@ -139,25 +189,7 @@ fields: [
           {"field": {"Name": "company_name_c"}},
           {"field": {"Name": "gst_number_tax_id_c"}},
           {"field": {"Name": "designation_job_title_c"}}
-{"field": {"Name": "Name"}},
-          {"field": {"Name": "firstName_c"}},
-          {"field": {"Name": "lastName_c"}},
-          {"field": {"Name": "email_c"}},
-          {"field": {"Name": "phone_c"}},
-          {"field": {"Name": "idType_c"}},
-          {"field": {"Name": "idNumber_c"}},
-          {"field": {"Name": "vipStatus_c"}},
-          {"field": {"Name": "address_c"}},
-          {"field": {"Name": "preferences_c"}},
-          {"field": {"Name": "allergies_c"}},
-          {"field": {"Name": "stayNotes_c"}},
-          {"field": {"Name": "stayHistory_c"}},
-          {"field": {"Name": "guest_id_c"}},
-          {"field": {"Name": "guest_type_c"}},
-          {"field": {"Name": "company_name_c"}},
-          {"field": {"Name": "gst_number_tax_id_c"}},
-          {"field": {"Name": "designation_job_title_c"}}
-
+        ]
       if (!response?.data) {
         return null;
       }
@@ -189,12 +221,12 @@ const guest = response.data;
     }
   },
 
-  async create(guestData) {
+async create(guestData) {
     try {
       const apperClient = getApperClient();
       
       // Filter only updateable fields and transform to database format
-const updateableData = {
+      const updateableData = {
         Name: `${guestData.firstName || ''} ${guestData.lastName || ''}`.trim() || `Guest-${Date.now()}`,
         firstName_c: guestData.firstName || '',
         lastName_c: guestData.lastName || '',
@@ -268,15 +300,14 @@ const updateableData = {
     }
   },
 
-  async update(id, updatedData) {
+async update(id, updatedData) {
     try {
       const apperClient = getApperClient();
       
       // Filter only updateable fields and transform to database format
-const updateableFields = {
+      const updateableFields = {
         Id: id,
         firstName_c: updatedData.firstName,
-        lastName_c: updatedData.lastName,
         email_c: updatedData.email,
         phone_c: updatedData.phone,
         idType_c: updatedData.idType,

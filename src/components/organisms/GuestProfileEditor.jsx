@@ -20,7 +20,6 @@ const [formData, setFormData] = useState({
     gstNumberTaxId: guest?.gstNumberTaxId || '',
     designationJobTitle: guest?.designationJobTitle || ''
   });
-);
 
   const [businessDetailsOpen, setBusinessDetailsOpen] = useState(false);
   
@@ -311,8 +310,6 @@ const renderBusinessDetails = () => (
     </div>
   );
 const renderPreferences = () => (
-
-const renderPreferences = () => (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h4 className="font-medium text-gray-900">Guest Preferences</h4>
@@ -360,12 +357,12 @@ const renderPreferences = () => (
         </div>
       )}
       
-      {!formData.preferences || formData.preferences.length === 0 ? (
+{!formData.preferences || formData.preferences.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <ApperIcon name="Settings" className="h-12 w-12 mx-auto mb-3 opacity-40" />
           <p>No preferences added yet</p>
         </div>
-) : (
+      ) : (
         <div className="space-y-2">
           {formData.preferences?.map((preference, index) => (
             <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -433,12 +430,12 @@ const renderAllergies = () => (
         </div>
       )}
       
-      {!formData.allergies || formData.allergies.length === 0 ? (
+{!formData.allergies || formData.allergies.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <ApperIcon name="AlertTriangle" className="h-12 w-12 mx-auto mb-3 opacity-40" />
           <p>No allergies recorded</p>
         </div>
-) : (
+      ) : (
         <div className="space-y-2">
           {formData.allergies?.map((allergy, index) => (
             <div key={index} className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-100">
@@ -538,13 +535,18 @@ const renderAllergies = () => (
                     <p className="text-sm text-gray-600">
                       {formData.firstName} {formData.lastName}
                     </p>
-                    {formData.guestId && (
-                      <p className="text-xs text-gray-500">
-                        Guest ID: <span className="font-mono font-semibold">{formData.guestId}</span>
-                      </p>
-                    )}
+)}
                   </div>
                 )}
+              </div>
+              <button
+                onClick={onClose}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <ApperIcon name="X" className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
 
           {/* Tab Navigation */}
           <div className="border-b border-gray-200">
