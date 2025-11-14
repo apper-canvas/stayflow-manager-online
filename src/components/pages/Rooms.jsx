@@ -1,8 +1,9 @@
-import { useState } from "react";
-import Button from "@/components/atoms/Button";
-import Select from "@/components/atoms/Select";
-import RoomsGrid from "@/components/organisms/RoomsGrid";
+import React, { useState } from "react";
+import toast from "react-hot-toast";
 import ApperIcon from "@/components/ApperIcon";
+import RoomsGrid from "@/components/organisms/RoomsGrid";
+import Select from "@/components/atoms/Select";
+import Button from "@/components/atoms/Button";
 
 const Rooms = () => {
   const [selectedFloor, setSelectedFloor] = useState("all");
@@ -16,34 +17,12 @@ const Rooms = () => {
           <h1 className="text-3xl font-bold text-gray-900">Rooms</h1>
           <p className="text-gray-600 mt-1">Manage room status and availability</p>
         </div>
-        <Button>
+<Button onClick={() => toast.info('Room settings feature coming soon!')}>
           <ApperIcon name="Settings" className="h-4 w-4 mr-2" />
           Room Settings
         </Button>
       </div>
 
-      {/* Room Status Legend */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Room Status Legend</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-4 h-4 bg-success rounded-full"></div>
-            <span className="text-sm font-medium text-gray-700">Available</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-4 h-4 bg-info rounded-full"></div>
-            <span className="text-sm font-medium text-gray-700">Occupied</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-4 h-4 bg-warning rounded-full"></div>
-            <span className="text-sm font-medium text-gray-700">Cleaning</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-4 h-4 bg-error rounded-full"></div>
-            <span className="text-sm font-medium text-gray-700">Maintenance</span>
-          </div>
-        </div>
-      </div>
 
       {/* Filters */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
