@@ -88,14 +88,42 @@ useEffect(() => {
       const selectedRoom = rooms.find(room => room.Id === roomId);
       
       if (selectedRoom && nights > 0 && typeof selectedRoom.pricePerNight === 'number') {
-        const total = nights * selectedRoom.pricePerNight;
+        const roomTotal = nights * selectedRoom.pricePerNight;
         // Final safety check to ensure total is a valid number
-        if (!isNaN(total) && isFinite(total)) {
-          setFormData(prev => ({ ...prev, totalAmount: total, number_of_nights_c: nights }));
+        if (!isNaN(roomTotal) && isFinite(roomTotal)) {
+          setFormData(prev => ({ ...prev, totalAmount: roomTotal, number_of_nights_c: nights }));
         }
       }
     }
   }, [formData.checkInDate, formData.checkOutDate, formData.roomId_c, rooms]);
+
+  // Calculate complete total including all charges and discounts
+  useEffect(() => {
+    const roomTotal = formData.totalAmount || 0;
+    
+    // Calculate tax
+    const taxPercentage = parseInt(formData.tax_percentage_c) || 5;
+    const tax = roomTotal * (taxPercentage / 100);
+    
+    // Calculate service charge
+    const serviceChargePercentage = parseFloat(formData.service_charge_percentage_c) || 0;
+    const serviceCharge = roomTotal * (serviceChargePercentage / 100);
+    
+    // Calculate additional services total
+    const additionalServicesTotal = formData.services.reduce((sum, s) => sum + (parseFloat(s.total) || 0), 0);
+    
+    // Calculate discount
+    const discount = parseFloat(formData.discount_value_c) || 0;
+    
+    // Calculate final total
+    const finalTotal = roomTotal + tax + serviceCharge + additionalServicesTotal - discount;
+    
+    // Store the final calculated total
+    setFormData(prev => ({
+      ...prev,
+      calculatedTotal: Math.max(0, finalTotal) // Ensure total is not negative
+    }));
+  }, [formData.totalAmount, formData.tax_percentage_c, formData.service_charge_percentage_c, formData.services, formData.discount_value_c]);
 
 const validateForm = () => {
     const errors = {};
@@ -688,7 +716,7 @@ className={formErrors.roomId_c ? "border-red-500" : ""}
                 </span>
               </div>
               <div className="border-t pt-3">
-                <div className="flex justify-between">
+<div className="flex justify-between">
                   <span className="text-gray-600">Room Total:</span>
                   <span className="font-medium">${formData.totalAmount.toFixed(2)}</span>
                 </div>
@@ -723,7 +751,7 @@ className={formErrors.roomId_c ? "border-red-500" : ""}
                 <div className="border-t pt-3 mt-3">
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total Amount:</span>
-                    <span>${formData.totalAmount.toFixed(2)}</span>
+                    <span>${(formData.calculatedTotal || 0).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
