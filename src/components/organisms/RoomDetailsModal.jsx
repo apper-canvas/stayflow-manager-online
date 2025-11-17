@@ -12,7 +12,7 @@ import Select from '@/components/atoms/Select';
 import roomService from '@/services/api/roomService';
 
 const RoomDetailsModal = ({ room, isOpen, onClose, onRoomUpdated, allRooms = [] }) => {
-  const [formData, setFormData] = useState(null);
+const [formData, setFormData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [selectedConnectedRooms, setSelectedConnectedRooms] = useState([]);
@@ -27,13 +27,19 @@ const RoomDetailsModal = ({ room, isOpen, onClose, onRoomUpdated, allRooms = [] 
         accessible: room.accessible_c || false,
         connectedRoomsAvailable: room.connectedRooms_c || false,
         specialFeatures: room.specialFeatures_c || '',
+        housekeepingStatus: room.housekeeping_status_c || 'Clean',
+        lastCleaned: room.lastCleaned_c || new Date().toISOString(),
+        assignedHousekeeper: room.assignedHousekeeper_c || '',
+        maintenanceStatus: room.maintenanceStatus_c || 'No Issues',
+        maintenanceNotes: room.maintenanceNotes_c || '',
+        lastMaintenanceDate: room.lastMaintenanceDate_c || '',
       });
       setUploadedFiles(room.roomImages_c ? room.roomImages_c.split(',').filter(Boolean) : []);
       setErrors({});
     }
   }, [room, isOpen]);
 
-  const handleInputChange = (field, value) => {
+const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -45,6 +51,15 @@ const RoomDetailsModal = ({ room, isOpen, onClose, onRoomUpdated, allRooms = [] 
         [field]: ''
       }));
     }
+  };
+
+  const handleHousekeepingStatusChange = (value) => {
+    const currentTime = new Date().toISOString();
+    setFormData(prev => ({
+      ...prev,
+      housekeepingStatus: value,
+      lastCleaned: currentTime
+    }));
   };
 
   const handleFileAdd = (newFiles) => {
@@ -75,7 +90,7 @@ const RoomDetailsModal = ({ room, isOpen, onClose, onRoomUpdated, allRooms = [] 
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -93,6 +108,12 @@ const RoomDetailsModal = ({ room, isOpen, onClose, onRoomUpdated, allRooms = [] 
         connectedRooms_c: formData.connectedRoomsAvailable,
         specialFeatures_c: formData.specialFeatures,
         roomImages_c: uploadedFiles.join(','),
+        housekeeping_status_c: formData.housekeepingStatus,
+        lastCleaned_c: formData.lastCleaned,
+        assignedHousekeeper_c: formData.assignedHousekeeper,
+        maintenanceStatus_c: formData.maintenanceStatus,
+        maintenanceNotes_c: formData.maintenanceNotes,
+        lastMaintenanceDate_c: formData.lastMaintenanceDate,
       };
 
       const result = await roomService.update(room.Id, updateData);
@@ -112,12 +133,21 @@ const RoomDetailsModal = ({ room, isOpen, onClose, onRoomUpdated, allRooms = [] 
 
   if (!isOpen || !formData) return null;
 
-  const availableRoomsForConnection = allRooms.filter(r => r.Id !== room.Id);
+const availableRoomsForConnection = allRooms.filter(r => r.Id !== room.Id);
   const smokingOptions = [
     { value: 'Smoking', label: 'Smoking' },
     { value: 'Non-Smoking', label: 'Non-Smoking' }
   ];
-
+  const housekeepingStatusOptions = [
+    { value: 'Clean', label: 'Clean' },
+    { value: 'Dirty', label: 'Dirty' },
+    { value: 'Inspected', label: 'Inspected' },
+    { value: 'In Progress', label: 'In Progress' }
+  ];
+  const maintenanceStatusOptions = [
+    { value: 'No Issues', label: 'No Issues' },
+    { value: 'Under Repair', label: 'Under Repair' }
+  ];
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -256,7 +286,7 @@ const RoomDetailsModal = ({ room, isOpen, onClose, onRoomUpdated, allRooms = [] 
               placeholder="e.g., Panoramic windows, Soundproof, Hot tub, Balcony..."
               error={errors.specialFeatures}
             />
-          </div>
+</div>
 
           {/* Room Info Display */}
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-2 text-sm">
@@ -278,6 +308,103 @@ const RoomDetailsModal = ({ room, isOpen, onClose, onRoomUpdated, allRooms = [] 
             </div>
           </div>
 
+          {/* Housekeeping Section */}
+          <div className="border-t pt-6 mt-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Housekeeping</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Housekeeping Status
+                </label>
+                <Select
+                  value={formData?.housekeepingStatus || 'Clean'}
+                  onChange={(e) => handleHousekeepingStatusChange(e.target.value)}
+                  className="w-full"
+                >
+                  {housekeepingStatusOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Last Cleaned Date & Time
+                </label>
+                <Input
+                  type="datetime-local"
+                  value={formData?.lastCleaned ? new Date(formData.lastCleaned).toISOString().slice(0, 16) : ''}
+                  disabled
+                  className="bg-gray-50"
+                />
+                <p className="text-xs text-gray-500 mt-1">Auto-updated when housekeeping status changes</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Assigned Housekeeper
+                </label>
+                <Select
+                  value={formData?.assignedHousekeeper || ''}
+                  onChange={(e) => handleInputChange('assignedHousekeeper', e.target.value)}
+                  className="w-full"
+                >
+                  <option value="">Select housekeeper</option>
+                  {/* Housekeeper options will be populated from staff list */}
+                  <option value="1">John Smith</option>
+                  <option value="2">Maria Garcia</option>
+                  <option value="3">Ahmed Hassan</option>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Maintenance Section */}
+          <div className="border-t pt-6 mt-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Maintenance</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700">
+                  Maintenance Status
+                </label>
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm font-medium ${formData?.maintenanceStatus === 'Under Repair' ? 'text-error' : 'text-success'}`}>
+                    {formData?.maintenanceStatus || 'No Issues'}
+                  </span>
+                  <Toggle
+                    checked={formData?.maintenanceStatus === 'Under Repair'}
+                    onChange={(checked) => handleInputChange('maintenanceStatus', checked ? 'Under Repair' : 'No Issues')}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Maintenance Notes
+                </label>
+                <Textarea
+                  value={formData?.maintenanceNotes || ''}
+                  onChange={(e) => handleInputChange('maintenanceNotes', e.target.value)}
+                  placeholder="Enter maintenance notes or issues..."
+                  rows={4}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Last Maintenance Date
+                </label>
+                <Input
+                  type="datetime-local"
+                  value={formData?.lastMaintenanceDate ? new Date(formData.lastMaintenanceDate).toISOString().slice(0, 16) : ''}
+                  onChange={(e) => handleInputChange('lastMaintenanceDate', new Date(e.target.value).toISOString())}
+                  className="w-full"
+                />
+              </div>
+            </div>
+          </div>
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4 border-t border-gray-200">
             <Button

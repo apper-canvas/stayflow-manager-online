@@ -28,7 +28,12 @@ fields: [
           {"field": {"Name": "petFriendly_c"}},
           {"field": {"Name": "accessible_c"}},
           {"field": {"Name": "connectedRooms_c"}},
-          {"field": {"Name": "specialFeatures_c"}}
+          {"field": {"Name": "specialFeatures_c"}},
+          {"field": {"Name": "housekeeping_status_c"}},
+          {"field": {"Name": "assignedHousekeeper_c"}},
+          {"field": {"Name": "maintenanceStatus_c"}},
+          {"field": {"Name": "maintenanceNotes_c"}},
+          {"field": {"Name": "lastMaintenanceDate_c"}}
         ]
       });
 
@@ -44,7 +49,7 @@ fields: [
 
 return response.data.map(room => ({
         ...room,
-roomId: room.room_id_c,
+        roomId: room.room_id_c,
         number: room.number_c,
         type: room.type_c,
         floor: room.floor_c,
@@ -65,6 +70,11 @@ roomId: room.room_id_c,
         accessible: room.accessible_c,
         connectedRooms: room.connectedRooms_c,
         specialFeatures: room.specialFeatures_c,
+        housekeepingStatus: room.housekeeping_status_c,
+        assignedHousekeeper: room.assignedHousekeeper_c,
+        maintenanceStatus: room.maintenanceStatus_c,
+        maintenanceNotes: room.maintenanceNotes_c,
+        lastMaintenanceDate: room.lastMaintenanceDate_c,
       }));
     } catch (error) {
       console.error("Error fetching rooms:", error?.response?.data?.message || error);
@@ -97,7 +107,12 @@ fields: [
           {"field": {"Name": "petFriendly_c"}},
           {"field": {"Name": "accessible_c"}},
           {"field": {"Name": "connectedRooms_c"}},
-          {"field": {"Name": "specialFeatures_c"}}
+          {"field": {"Name": "specialFeatures_c"}},
+          {"field": {"Name": "housekeeping_status_c"}},
+          {"field": {"Name": "assignedHousekeeper_c"}},
+          {"field": {"Name": "maintenanceStatus_c"}},
+          {"field": {"Name": "maintenanceNotes_c"}},
+          {"field": {"Name": "lastMaintenanceDate_c"}}
         ]
       });
 
@@ -128,6 +143,11 @@ fields: [
         accessible: room.accessible_c,
         connectedRooms: room.connectedRooms_c,
         specialFeatures: room.specialFeatures_c,
+        housekeepingStatus: room.housekeeping_status_c,
+        assignedHousekeeper: room.assignedHousekeeper_c,
+        maintenanceStatus: room.maintenanceStatus_c,
+        maintenanceNotes: room.maintenanceNotes_c,
+        lastMaintenanceDate: room.lastMaintenanceDate_c,
       };
     } catch (error) {
       console.error("Error fetching room:", error?.response?.data?.message || error);
@@ -153,14 +173,19 @@ const updateableData = {
         maxOccupancy_c: roomData.maxOccupancy ? parseInt(roomData.maxOccupancy) : null,
         baseRate_c: roomData.baseRate ? parseFloat(roomData.baseRate) : (roomData.pricePerNight ? parseFloat(roomData.pricePerNight) : null),
         status_c: roomData.status || 'available',
-lastCleaned_c: roomData.lastCleaned || new Date().toISOString(),
+        lastCleaned_c: roomData.lastCleaned || new Date().toISOString(),
         roomDescription_c: roomData.roomDescription,
         roomImages_c: roomData.roomImages,
         smokingStatus_c: roomData.smokingStatus,
         petFriendly_c: roomData.petFriendly,
         accessible_c: roomData.accessible,
         connectedRooms_c: roomData.connectedRooms,
-        specialFeatures_c: roomData.specialFeatures
+        specialFeatures_c: roomData.specialFeatures,
+        housekeeping_status_c: roomData.housekeepingStatus,
+        assignedHousekeeper_c: roomData.assignedHousekeeper ? parseInt(roomData.assignedHousekeeper) : null,
+        maintenanceStatus_c: roomData.maintenanceStatus,
+        maintenanceNotes_c: roomData.maintenanceNotes,
+        lastMaintenanceDate_c: roomData.lastMaintenanceDate
       };
 Object.keys(updateableData).forEach(key => {
         if (updateableData[key] === null || updateableData[key] === undefined || updateableData[key] === '') {
@@ -201,7 +226,7 @@ Object.keys(updateableData).forEach(key => {
     try {
 const apperClient = getApperClient();
       
-      const updateableFields = {
+const updateableFields = {
         Id: id,
         room_id_c: updatedData.roomId,
         number_c: updatedData.number,
@@ -214,7 +239,7 @@ const apperClient = getApperClient();
         maximum_occupancy_children_c: updatedData.maxOccupancyChildren ? parseInt(updatedData.maxOccupancyChildren) : undefined,
         maxOccupancy_c: updatedData.maxOccupancy ? parseInt(updatedData.maxOccupancy) : undefined,
         baseRate_c: updatedData.baseRate ? parseFloat(updatedData.baseRate) : (updatedData.pricePerNight ? parseFloat(updatedData.pricePerNight) : undefined),
-status_c: updatedData.status,
+        status_c: updatedData.status,
         lastCleaned_c: updatedData.lastCleaned,
         roomDescription_c: updatedData.roomDescription_c,
         roomImages_c: updatedData.roomImages_c,
@@ -222,7 +247,12 @@ status_c: updatedData.status,
         petFriendly_c: updatedData.petFriendly_c,
         accessible_c: updatedData.accessible_c,
         connectedRooms_c: updatedData.connectedRooms_c,
-        specialFeatures_c: updatedData.specialFeatures_c
+        specialFeatures_c: updatedData.specialFeatures_c,
+        housekeeping_status_c: updatedData.housekeepingStatus,
+        assignedHousekeeper_c: updatedData.assignedHousekeeper ? parseInt(updatedData.assignedHousekeeper) : undefined,
+        maintenanceStatus_c: updatedData.maintenanceStatus,
+        maintenanceNotes_c: updatedData.maintenanceNotes,
+        lastMaintenanceDate_c: updatedData.lastMaintenanceDate
       };
 
       // Remove fields with null, undefined, or empty string values
