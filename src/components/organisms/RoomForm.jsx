@@ -6,11 +6,16 @@ import ApperIcon from '@/components/ApperIcon';
 import { cn } from '@/utils/cn';
 
 const RoomForm = ({ initialData, onSubmit, onCancel, loading }) => {
-  const [formData, setFormData] = useState({
+const [formData, setFormData] = useState({
+    roomId: '',
     number: '',
     type: '',
     floor: '',
-    maxOccupancy: '',
+    roomSize: '',
+    viewType: '',
+    bedConfiguration: '',
+    maxOccupancyAdults: '',
+    maxOccupancyChildren: '',
     baseRate: '',
     status: 'available'
   });
@@ -18,28 +23,52 @@ const RoomForm = ({ initialData, onSubmit, onCancel, loading }) => {
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
 
-  useEffect(() => {
+useEffect(() => {
     if (initialData) {
       setFormData({
+        roomId: initialData.roomId || '',
         number: initialData.number || '',
         type: initialData.type || '',
         floor: initialData.floor?.toString() || '',
-        maxOccupancy: initialData.maxOccupancy?.toString() || '',
+        roomSize: initialData.roomSize?.toString() || '',
+        viewType: initialData.viewType || '',
+        bedConfiguration: initialData.bedConfiguration || '',
+        maxOccupancyAdults: initialData.maxOccupancyAdults?.toString() || '',
+        maxOccupancyChildren: initialData.maxOccupancyChildren?.toString() || '',
         baseRate: initialData.baseRate?.toString() || initialData.pricePerNight?.toString() || '',
         status: initialData.status || 'available'
       });
     }
   }, [initialData]);
 
-  const roomTypes = [
-    { value: 'standard', label: 'Standard Room' },
-    { value: 'deluxe', label: 'Deluxe Room' },
-    { value: 'suite', label: 'Suite' },
-    { value: 'presidential', label: 'Presidential Suite' },
-    { value: 'family', label: 'Family Room' },
-    { value: 'single', label: 'Single Room' },
-    { value: 'double', label: 'Double Room' },
-    { value: 'twin', label: 'Twin Room' }
+const roomTypes = [
+    { value: 'Single', label: 'Single Room' },
+    { value: 'Double', label: 'Double Room' },
+    { value: 'Deluxe', label: 'Deluxe Room' },
+    { value: 'Suite', label: 'Suite' },
+    { value: 'Presidential', label: 'Presidential Suite' },
+    { value: 'Family', label: 'Family Room' },
+    { value: 'Family Suite', label: 'Family Suite' },
+    { value: 'Presidential Suite', label: 'Presidential Suite' },
+    { value: 'Executive Suite', label: 'Executive Suite' },
+    { value: 'Deluxe Queen', label: 'Deluxe Queen' },
+    { value: 'Standard Double', label: 'Standard Double' }
+  ];
+
+  const viewTypeOptions = [
+    { value: 'City View', label: 'City View' },
+    { value: 'Ocean View', label: 'Ocean View' },
+    { value: 'Garden View', label: 'Garden View' },
+    { value: 'Mountain View', label: 'Mountain View' },
+    { value: 'Pool View', label: 'Pool View' },
+    { value: 'No View', label: 'No View' }
+  ];
+
+  const bedConfigurationOptions = [
+    { value: '1 King Bed', label: '1 King Bed' },
+    { value: '2 Queen Beds', label: '2 Queen Beds' },
+    { value: '1 Queen Bed', label: '1 Queen Bed' },
+    { value: 'Twin Beds', label: 'Twin Beds' }
   ];
 
   const statusOptions = [
@@ -47,10 +76,11 @@ const RoomForm = ({ initialData, onSubmit, onCancel, loading }) => {
     { value: 'occupied', label: 'Occupied' },
     { value: 'cleaning', label: 'Cleaning' },
     { value: 'maintenance', label: 'Maintenance' },
-    { value: 'out-of-order', label: 'Out of Order' }
+    { value: 'out of service', label: 'Out of Service' },
+    { value: 'blocked', label: 'Blocked' }
   ];
 
-  const validateField = (name, value) => {
+const validateField = (name, value) => {
     const newErrors = { ...errors };
 
     switch (name) {
@@ -82,13 +112,45 @@ const RoomForm = ({ initialData, onSubmit, onCancel, loading }) => {
         }
         break;
 
-      case 'maxOccupancy':
-        if (!value) {
-          newErrors.maxOccupancy = 'Max occupancy is required';
-        } else if (!/^\d+$/.test(value) || parseInt(value) < 1 || parseInt(value) > 20) {
-          newErrors.maxOccupancy = 'Max occupancy must be between 1 and 20';
+      case 'roomSize':
+        if (value && (!/^\d+$/.test(value) || parseInt(value) < 1)) {
+          newErrors.roomSize = 'Room size must be a positive number';
         } else {
-          delete newErrors.maxOccupancy;
+          delete newErrors.roomSize;
+        }
+        break;
+
+      case 'viewType':
+        if (value) {
+          delete newErrors.viewType;
+        } else {
+          delete newErrors.viewType;
+        }
+        break;
+
+      case 'bedConfiguration':
+        if (value) {
+          delete newErrors.bedConfiguration;
+        } else {
+          delete newErrors.bedConfiguration;
+        }
+        break;
+
+      case 'maxOccupancyAdults':
+        if (!value) {
+          newErrors.maxOccupancyAdults = 'Max occupancy (adults) is required';
+        } else if (!/^\d+$/.test(value) || parseInt(value) < 1 || parseInt(value) > 20) {
+          newErrors.maxOccupancyAdults = 'Max occupancy must be between 1 and 20';
+        } else {
+          delete newErrors.maxOccupancyAdults;
+        }
+        break;
+
+      case 'maxOccupancyChildren':
+        if (value && (!/^\d+$/.test(value) || parseInt(value) < 0 || parseInt(value) > 10)) {
+          newErrors.maxOccupancyChildren = 'Max occupancy (children) must be between 0 and 10';
+        } else {
+          delete newErrors.maxOccupancyChildren;
         }
         break;
 
@@ -146,152 +208,269 @@ const RoomForm = ({ initialData, onSubmit, onCancel, loading }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Room Number */}
-        <div className="space-y-2">
-          <label htmlFor="number" className="block text-sm font-medium text-gray-700">
-            Room Number *
-          </label>
-          <Input
-            id="number"
-            name="number"
-            value={formData.number}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="e.g., 101, A-201"
-            className={cn(
-              "input-field",
-              errors.number && touched.number && "border-error focus:ring-error/20"
-            )}
-          />
-          {errors.number && touched.number && (
-            <p className="text-sm text-error">{errors.number}</p>
-          )}
-        </div>
-
-        {/* Room Type */}
-        <div className="space-y-2">
-          <label htmlFor="type" className="block text-sm font-medium text-gray-700">
-            Room Type *
-          </label>
-          <Select
-            id="type"
-            name="type"
-            value={formData.type}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            className={cn(
-              "input-field",
-              errors.type && touched.type && "border-error focus:ring-error/20"
-            )}
-          >
-            <option value="">Select room type</option>
-            {roomTypes.map(type => (
-              <option key={type.value} value={type.value}>
-                {type.label}
-              </option>
-            ))}
-          </Select>
-          {errors.type && touched.type && (
-            <p className="text-sm text-error">{errors.type}</p>
-          )}
-        </div>
-
-        {/* Floor */}
-        <div className="space-y-2">
-          <label htmlFor="floor" className="block text-sm font-medium text-gray-700">
-            Floor *
-          </label>
-          <Input
-            id="floor"
-            name="floor"
-            type="number"
-            min="1"
-            value={formData.floor}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="e.g., 1, 2, 3"
-            className={cn(
-              "input-field",
-              errors.floor && touched.floor && "border-error focus:ring-error/20"
-            )}
-          />
-          {errors.floor && touched.floor && (
-            <p className="text-sm text-error">{errors.floor}</p>
-          )}
-        </div>
-
-        {/* Max Occupancy */}
-        <div className="space-y-2">
-          <label htmlFor="maxOccupancy" className="block text-sm font-medium text-gray-700">
-            Max Occupancy *
-          </label>
-          <Input
-            id="maxOccupancy"
-            name="maxOccupancy"
-            type="number"
-            min="1"
-            max="20"
-            value={formData.maxOccupancy}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="e.g., 2, 4"
-            className={cn(
-              "input-field",
-              errors.maxOccupancy && touched.maxOccupancy && "border-error focus:ring-error/20"
-            )}
-          />
-          {errors.maxOccupancy && touched.maxOccupancy && (
-            <p className="text-sm text-error">{errors.maxOccupancy}</p>
-          )}
-        </div>
-
-        {/* Base Rate */}
-        <div className="space-y-2">
-          <label htmlFor="baseRate" className="block text-sm font-medium text-gray-700">
-            Base Rate (per night) *
-          </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-gray-500 sm:text-sm">$</span>
-            </div>
+{/* Section 1: Basic Information */}
+      <div className="bg-gray-50 rounded-lg p-6 mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Room ID - Read Only */}
+          <div className="space-y-2">
+            <label htmlFor="roomId" className="block text-sm font-medium text-gray-700">
+              Room ID
+            </label>
             <Input
-              id="baseRate"
-              name="baseRate"
-              type="text"
-              value={formData.baseRate}
+              id="roomId"
+              name="roomId"
+              value={formData.roomId}
+              disabled={true}
+              placeholder="Auto-generated"
+              className="input-field bg-gray-100 cursor-not-allowed"
+            />
+            <p className="text-xs text-gray-500">Auto-generated format: RM-XXX</p>
+          </div>
+
+          {/* Room Number */}
+          <div className="space-y-2">
+            <label htmlFor="number" className="block text-sm font-medium text-gray-700">
+              Room Number *
+            </label>
+            <Input
+              id="number"
+              name="number"
+              value={formData.number}
               onChange={handleChange}
               onBlur={handleBlur}
-              placeholder="0.00"
+              placeholder="e.g., 101, A-201"
               className={cn(
-                "input-field pl-8",
-                errors.baseRate && touched.baseRate && "border-error focus:ring-error/20"
+                "input-field",
+                errors.number && touched.number && "border-error focus:ring-error/20"
               )}
             />
+            {errors.number && touched.number && (
+              <p className="text-sm text-error">{errors.number}</p>
+            )}
           </div>
-          {errors.baseRate && touched.baseRate && (
-            <p className="text-sm text-error">{errors.baseRate}</p>
-          )}
-        </div>
 
-        {/* Status */}
-        <div className="space-y-2">
-          <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-            Status
-          </label>
-          <Select
-            id="status"
-            name="status"
-            value={formData.status}
-            onChange={handleChange}
-            className="input-field"
-          >
-            {statusOptions.map(status => (
-              <option key={status.value} value={status.value}>
-                {status.label}
-              </option>
-            ))}
-          </Select>
+          {/* Floor Number */}
+          <div className="space-y-2">
+            <label htmlFor="floor" className="block text-sm font-medium text-gray-700">
+              Floor Number *
+            </label>
+            <Input
+              id="floor"
+              name="floor"
+              type="number"
+              min="1"
+              value={formData.floor}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="e.g., 1, 2, 3"
+              className={cn(
+                "input-field",
+                errors.floor && touched.floor && "border-error focus:ring-error/20"
+              )}
+            />
+            {errors.floor && touched.floor && (
+              <p className="text-sm text-error">{errors.floor}</p>
+            )}
+          </div>
+
+          {/* Room Type */}
+          <div className="space-y-2">
+            <label htmlFor="type" className="block text-sm font-medium text-gray-700">
+              Room Type *
+            </label>
+            <Select
+              id="type"
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className={cn(
+                "input-field",
+                errors.type && touched.type && "border-error focus:ring-error/20"
+              )}
+            >
+              <option value="">Select room type</option>
+              {roomTypes.map(type => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </Select>
+            {errors.type && touched.type && (
+              <p className="text-sm text-error">{errors.type}</p>
+            )}
+          </div>
+
+          {/* Room Size */}
+          <div className="space-y-2">
+            <label htmlFor="roomSize" className="block text-sm font-medium text-gray-700">
+              Room Size
+            </label>
+            <div className="flex gap-2">
+              <Input
+                id="roomSize"
+                name="roomSize"
+                type="number"
+                min="1"
+                value={formData.roomSize}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                placeholder="e.g., 250"
+                className={cn(
+                  "input-field flex-1",
+                  errors.roomSize && touched.roomSize && "border-error focus:ring-error/20"
+                )}
+              />
+              <Select className="input-field w-32" disabled>
+                <option>sq ft</option>
+              </Select>
+            </div>
+            {errors.roomSize && touched.roomSize && (
+              <p className="text-sm text-error">{errors.roomSize}</p>
+            )}
+          </div>
+
+          {/* View Type */}
+          <div className="space-y-2">
+            <label htmlFor="viewType" className="block text-sm font-medium text-gray-700">
+              View Type
+            </label>
+            <Select
+              id="viewType"
+              name="viewType"
+              value={formData.viewType}
+              onChange={handleChange}
+              className="input-field"
+            >
+              <option value="">Select view type</option>
+              {viewTypeOptions.map(view => (
+                <option key={view.value} value={view.value}>
+                  {view.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          {/* Bed Configuration */}
+          <div className="space-y-2">
+            <label htmlFor="bedConfiguration" className="block text-sm font-medium text-gray-700">
+              Bed Configuration
+            </label>
+            <Select
+              id="bedConfiguration"
+              name="bedConfiguration"
+              value={formData.bedConfiguration}
+              onChange={handleChange}
+              className="input-field"
+            >
+              <option value="">Select bed configuration</option>
+              {bedConfigurationOptions.map(bed => (
+                <option key={bed.value} value={bed.value}>
+                  {bed.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          {/* Maximum Occupancy Adults */}
+          <div className="space-y-2">
+            <label htmlFor="maxOccupancyAdults" className="block text-sm font-medium text-gray-700">
+              Maximum Occupancy (Adults) *
+            </label>
+            <Input
+              id="maxOccupancyAdults"
+              name="maxOccupancyAdults"
+              type="number"
+              min="1"
+              max="20"
+              value={formData.maxOccupancyAdults}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="e.g., 2, 4"
+              className={cn(
+                "input-field",
+                errors.maxOccupancyAdults && touched.maxOccupancyAdults && "border-error focus:ring-error/20"
+              )}
+            />
+            {errors.maxOccupancyAdults && touched.maxOccupancyAdults && (
+              <p className="text-sm text-error">{errors.maxOccupancyAdults}</p>
+            )}
+          </div>
+
+          {/* Maximum Occupancy Children */}
+          <div className="space-y-2">
+            <label htmlFor="maxOccupancyChildren" className="block text-sm font-medium text-gray-700">
+              Maximum Occupancy (Children)
+            </label>
+            <Input
+              id="maxOccupancyChildren"
+              name="maxOccupancyChildren"
+              type="number"
+              min="0"
+              max="10"
+              value={formData.maxOccupancyChildren}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="e.g., 0, 2"
+              className={cn(
+                "input-field",
+                errors.maxOccupancyChildren && touched.maxOccupancyChildren && "border-error focus:ring-error/20"
+              )}
+            />
+            {errors.maxOccupancyChildren && touched.maxOccupancyChildren && (
+              <p className="text-sm text-error">{errors.maxOccupancyChildren}</p>
+            )}
+          </div>
+
+          {/* Base Rate */}
+          <div className="space-y-2">
+            <label htmlFor="baseRate" className="block text-sm font-medium text-gray-700">
+              Base Rate (per night) *
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span className="text-gray-500 sm:text-sm">$</span>
+              </div>
+              <Input
+                id="baseRate"
+                name="baseRate"
+                type="text"
+                value={formData.baseRate}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                placeholder="0.00"
+                className={cn(
+                  "input-field pl-8",
+                  errors.baseRate && touched.baseRate && "border-error focus:ring-error/20"
+                )}
+              />
+            </div>
+            {errors.baseRate && touched.baseRate && (
+              <p className="text-sm text-error">{errors.baseRate}</p>
+            )}
+          </div>
+
+          {/* Status */}
+          <div className="space-y-2">
+            <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+              Status *
+            </label>
+            <Select
+              id="status"
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              className="input-field"
+            >
+              {statusOptions.map(status => (
+                <option key={status.value} value={status.value}>
+                  {status.label}
+                </option>
+              ))}
+            </Select>
+          </div>
         </div>
       </div>
 

@@ -28,9 +28,9 @@ const RoomsGrid = ({ selectedFloor, statusFilter }) => {
     loadRooms();
   }, []);
 
-  const handleStatusChange = async (roomId, newStatus) => {
+const handleStatusChange = async (roomId, newStatus) => {
     try {
-const room = rooms.find(r => r.Id === roomId);
+      const room = rooms.find(r => r.Id === roomId);
       if (!room) return;
 
       const updatedData = { status: newStatus };
