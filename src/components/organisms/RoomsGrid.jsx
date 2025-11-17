@@ -103,7 +103,6 @@ return (
         onRoomUpdated={handleRoomUpdated}
         allRooms={rooms}
       />
-    </>
 </>
   );
 };
