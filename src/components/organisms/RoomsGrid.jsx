@@ -1,17 +1,17 @@
-import { useState, useEffect } from "react";
-import RoomCard from "@/components/molecules/RoomCard";
-import RoomDetailsModal from "@/components/organisms/RoomDetailsModal";
-import Loading from "@/components/ui/Loading";
-import ErrorView from "@/components/ui/ErrorView";
-import Empty from "@/components/ui/Empty";
-import roomService from "@/services/api/roomService";
+import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import roomService from "@/services/api/roomService";
+import RoomCard from "@/components/molecules/RoomCard";
+import Loading from "@/components/ui/Loading";
+import Empty from "@/components/ui/Empty";
+import ErrorView from "@/components/ui/ErrorView";
+import RoomDetailsModal from "@/components/organisms/RoomDetailsModal";
 
 const RoomsGrid = ({ selectedFloor, statusFilter }) => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-const [selectedRoom, setSelectedRoom] = useState(null);
+  const [selectedRoom, setSelectedRoom] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
   const loadRooms = async () => {
     try {
@@ -26,11 +26,11 @@ const [selectedRoom, setSelectedRoom] = useState(null);
     }
   };
 
-  useEffect(() => {
+useEffect(() => {
     loadRooms();
   }, []);
 
-const handleStatusChange = async (roomId, newStatus) => {
+  const handleStatusChange = async (roomId, newStatus) => {
     try {
       const room = rooms.find(r => r.Id === roomId);
       if (!room) return;
@@ -45,28 +45,34 @@ const handleStatusChange = async (roomId, newStatus) => {
     } catch (err) {
       toast.error("Failed to update room status");
     }
-  };
+};
 
-const handleRoomClick = (room) => {
+  const handleRoomClick = (room) => {
     setSelectedRoom(room);
     setShowDetails(true);
   };
 
   const handleRoomUpdated = (updatedRoom) => {
+  const handleRoomUpdated = (updatedRoom) => {
     setRooms(rooms.map(r => r.Id === updatedRoom.Id ? updatedRoom : r));
     setShowDetails(false);
   };
 
-  if (loading) return <Loading />;
+if (loading) return <Loading />;
   if (error) return <ErrorView message={error} onRetry={loadRooms} />;
 
-  // Filter rooms by floor and status
   let filteredRooms = rooms;
-if (selectedFloor !== "all") {
-    filteredRooms = filteredRooms.filter(room => (room.floor || room.floor_c) === parseInt(selectedFloor));
+  if (selectedFloor !== "all") {
+    filteredRooms = filteredRooms.filter(room => {
+      const floor = parseInt(room.floor || room.floor_c);
+      return floor === parseInt(selectedFloor);
+    });
   }
   if (statusFilter !== "all") {
-    filteredRooms = filteredRooms.filter(room => (room.status || room.status_c) === statusFilter);
+    filteredRooms = filteredRooms.filter(room => {
+      const status = room.status || room.status_c;
+      return status === statusFilter;
+    });
   }
 
   if (filteredRooms.length === 0) {
@@ -78,20 +84,19 @@ if (selectedFloor !== "all") {
       />
     );
   }
-
 return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredRooms.map((room) => (
-          <RoomCard
-            key={room.Id}
-            room={room}
-            onClick={() => handleRoomClick(room)}
-            onStatusChange={handleStatusChange}
-          />
+          <div key={room.Id} className="group">
+            <RoomCard
+              room={room}
+              onClick={() => handleRoomClick(room)}
+              onStatusChange={handleStatusChange}
+            />
+          </div>
         ))}
       </div>
-
       <RoomDetailsModal
         room={selectedRoom}
         isOpen={showDetails}
@@ -101,6 +106,7 @@ return (
       />
     </>
   );
+};
 };
 
 export default RoomsGrid;

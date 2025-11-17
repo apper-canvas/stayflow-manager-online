@@ -1,13 +1,13 @@
-import React, { useState, useMemo } from 'react';
-import Button from '@/components/atoms/Button';
-import Input from '@/components/atoms/Input';
-import Select from '@/components/atoms/Select';
-import Badge from '@/components/atoms/Badge';
-import ApperIcon from '@/components/ApperIcon';
-import Loading from '@/components/ui/Loading';
-import Empty from '@/components/ui/Empty';
-import ErrorView from '@/components/ui/ErrorView';
-import { cn } from '@/utils/cn';
+import React, { useMemo, useState } from "react";
+import { cn } from "@/utils/cn";
+import ApperIcon from "@/components/ApperIcon";
+import Loading from "@/components/ui/Loading";
+import Empty from "@/components/ui/Empty";
+import ErrorView from "@/components/ui/ErrorView";
+import Select from "@/components/atoms/Select";
+import Button from "@/components/atoms/Button";
+import Badge from "@/components/atoms/Badge";
+import Input from "@/components/atoms/Input";
 
 const RoomList = ({ rooms, loading, error, onEdit, onDelete, onRefresh, onStatusChange }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -43,23 +43,30 @@ const statusOptions = [
     }
   };
 
-  const typeOptions = useMemo(() => {
-    const types = [...new Set(rooms.map(room => room.type).filter(Boolean))];
+const typeOptions = useMemo(() => {
+    const types = [...new Set(rooms.map(room => room.type || room.type_c).filter(Boolean))];
     return [
       { value: '', label: 'All Types' },
       ...types.map(type => ({ value: type, label: type.charAt(0).toUpperCase() + type.slice(1) }))
     ];
   }, [rooms]);
 
-  const filteredRooms = useMemo(() => {
+
+const filteredRooms = useMemo(() => {
     return rooms.filter(room => {
-      const matchesSearch = !searchTerm || 
-        room.number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        room.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        room.Name?.toLowerCase().includes(searchTerm.toLowerCase());
+      const roomNumber = room.number || room.number_c || '';
+      const roomType = room.type || room.type_c || '';
+      const roomName = room.Name || '';
       
-      const matchesStatus = !statusFilter || room.status === statusFilter;
-      const matchesType = !typeFilter || room.type === typeFilter;
+      const matchesSearch = !searchTerm || 
+        roomNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        roomType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        roomName.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const status = room.status || room.status_c;
+      const type = room.type || room.type_c;
+      const matchesStatus = !statusFilter || status === statusFilter;
+      const matchesType = !typeFilter || type === typeFilter;
 
       return matchesSearch && matchesStatus && matchesType;
     });
@@ -205,34 +212,34 @@ const statusOptions = [
                   <th className="text-right py-3 px-4 font-medium text-gray-900">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+<tbody className="divide-y divide-gray-100">
                 {paginatedRooms.map((room) => (
-                  <tr key={room.Id} className="hover:bg-gray-50">
+                  <tr key={room.Id} className="hover:bg-gray-50 border-b border-gray-200">
                     <td className="py-4 px-4">
                       <div>
                         <div className="font-medium text-gray-900">
-                          {room.number || `Room ${room.Id}`}
+                          {room.number || room.number_c || `Room ${room.Id}`}
                         </div>
-                        <div className="text-sm text-gray-500">{room.Name}</div>
+                        <div className="text-sm text-gray-500">{room.Name || ''}</div>
                       </div>
                     </td>
                     <td className="py-4 px-4">
                       <span className="capitalize text-gray-900">
-                        {room.type || 'Not specified'}
+                        {room.type || room.type_c || 'Not specified'}
                       </span>
                     </td>
                     <td className="py-4 px-4 text-gray-900">
-                      {room.floor || 'N/A'}
+                      {room.floor || room.floor_c || 'N/A'}
                     </td>
                     <td className="py-4 px-4 text-gray-900">
-                      {room.maxOccupancy || 'N/A'}
+                      {room.maxOccupancy || room.maxOccupancy_c || 'N/A'}
                     </td>
                     <td className="py-4 px-4 text-gray-900">
-                      {formatCurrency(room.baseRate || room.pricePerNight)}
-                    </td>
-<td className="py-4 px-4">
+                      {formatCurrency(room.baseRate || room.baseRate_c)}
+</td>
+                    <td className="py-4 px-4">
                       <Select
-                        value={room.status || 'available'}
+                        value={room.status || room.status_c || 'available'}
                         onChange={(e) => handleStatusChange(room.Id, e.target.value)}
                         disabled={updatingStatus === room.Id}
                         className={cn(
@@ -248,7 +255,7 @@ const statusOptions = [
                       </Select>
                     </td>
                     <td className="py-4 px-4 text-gray-600 text-sm">
-                      {formatDate(room.lastCleaned)}
+                      {formatDate(room.lastCleaned || room.lastCleaned_c)}
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-2 justify-end">
