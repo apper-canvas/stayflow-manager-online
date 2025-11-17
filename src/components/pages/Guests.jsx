@@ -2,43 +2,63 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/Card";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
+import reservationService from "@/services/api/reservationService";
 import guestService from "@/services/api/guestService";
 import ApperIcon from "@/components/ApperIcon";
-import Loading from "@/components/ui/Loading";
-import ErrorView from "@/components/ui/ErrorView";
-import Empty from "@/components/ui/Empty";
 import SearchBar from "@/components/molecules/SearchBar";
 import FormField from "@/components/molecules/FormField";
-import Input from "@/components/atoms/Input";
-import Button from "@/components/atoms/Button";
-import Select from "@/components/atoms/Select";
-import Badge from "@/components/atoms/Badge";
+import Loading from "@/components/ui/Loading";
+import Empty from "@/components/ui/Empty";
+import ErrorView from "@/components/ui/ErrorView";
 import GuestProfileEditor from "@/components/organisms/GuestProfileEditor";
+import Select from "@/components/atoms/Select";
+import Button from "@/components/atoms/Button";
+import Badge from "@/components/atoms/Badge";
+import Input from "@/components/atoms/Input";
 const Guests = () => {
   const [guests, setGuests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-const [selectedGuest, setSelectedGuest] = useState(null);
-const [editingGuest, setEditingGuest] = useState(null);
+  const [selectedGuest, setSelectedGuest] = useState(null);
+  const [editingGuest, setEditingGuest] = useState(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [reservationData, setReservationData] = useState([]);
+  const [reservationLoading, setReservationLoading] = useState(false);
 const loadGuests = async () => {
-    try {
-      setLoading(true);
-      setError("");
-      const data = await guestService.getAll();
-      setGuests(data);
-    } catch (err) {
-      setError(err.message || "Failed to load guests");
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    setLoading(true);
+    setError("");
+    const data = await guestService.getAll();
+    setGuests(data);
+  } catch (err) {
+    setError(err.message || "Failed to load guests");
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const handleEditGuest = (guest) => {
-    setEditingGuest({ ...guest });
-setIsEditorOpen(true);
-  };
+const loadReservations = async (guestId) => {
+  try {
+    setReservationLoading(true);
+    const response = await reservationService.getAll();
+    const guestReservations = response.filter(res => {
+      const guestLookupId = res.guestId_c?.Id || res.guestId_c;
+      return guestLookupId === guestId || res.guestName_c?.Id === guestId;
+    });
+    setReservationData(guestReservations);
+  } catch (err) {
+    console.error("Error loading reservations:", err);
+    setReservationData([]);
+  } finally {
+    setReservationLoading(false);
+  }
+};
+
+const handleEditGuest = (guest) => {
+  setEditingGuest({ ...guest });
+  setIsEditorOpen(true);
+};
 
   const handleAddGuest = () => {
 setEditingGuest({
@@ -64,11 +84,11 @@ setEditingGuest({
     setIsEditorOpen(true);
   };
 
-  const handleCloseEditor = () => {
-    setIsEditorOpen(false);
-    setEditingGuest(null);
-  };
-
+const handleCloseEditor = () => {
+  setIsEditorOpen(false);
+  setEditingGuest(null);
+  setReservationData([]);
+};
 const handleSaveGuest = async (updatedGuest) => {
     try {
       if (updatedGuest.Id) {
@@ -88,9 +108,17 @@ const handleSaveGuest = async (updatedGuest) => {
     }
   };
 
-  useEffect(() => {
-    loadGuests();
-  }, []);
+useEffect(() => {
+  loadGuests();
+}, []);
+
+useEffect(() => {
+  if (selectedGuest?.Id) {
+    loadReservations(selectedGuest.Id);
+  } else {
+    setReservationData([]);
+  }
+}, [selectedGuest]);
 
 const filteredGuests = guests.filter(guest =>
     (guest.firstName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -264,18 +292,108 @@ const filteredGuests = guests.filter(guest =>
                           </div>
                         </div>
                       ))}
-                      {selectedGuest.stayHistory.length > 3 && (
+{selectedGuest.stayHistory.length > 3 && (
                         <p className="text-xs text-gray-500 text-center">
                           +{selectedGuest.stayHistory.length - 3} more stays
                         </p>
                       )}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
+
+                {/* Reservations */}
+                {reservationLoading ? (
+                  <div className="py-4 text-center">
+                    <p className="text-sm text-gray-500">Loading reservations...</p>
+                  </div>
+                ) : reservationData.length > 0 ? (
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-3">Reservation Details</h4>
+                    <div className="space-y-4">
+                      {reservationData.map((reservation, index) => (
+                        <div key={index} className="border border-gray-200 rounded-lg p-4 space-y-3 bg-gray-50">
+                          {/* Reservation ID and Nights */}
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <p className="text-xs text-gray-600">Reservation ID</p>
+                              <p className="text-sm font-medium text-gray-900">{reservation.reservation_id_c || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-600">Number of Nights</p>
+                              <p className="text-sm font-medium text-gray-900">{reservation.number_of_nights_c || 0}</p>
+                            </div>
+                          </div>
+
+                          {/* Tax and Service Charge */}
+                          <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-200">
+                            <div>
+                              <p className="text-xs text-gray-600">Tax Percentage</p>
+                              <p className="text-sm font-medium text-gray-900">{reservation.tax_percentage_c || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-600">Service Charge %</p>
+                              <p className="text-sm font-medium text-gray-900">{reservation.service_charge_percentage_c || '0'}%</p>
+                            </div>
+                          </div>
+
+                          {/* Discount Information */}
+                          <div className="pt-2 border-t border-gray-200 space-y-2">
+                            <div>
+                              <p className="text-xs text-gray-600">Discount Type</p>
+                              <p className="text-sm font-medium text-gray-900">{reservation.discount_type_c || 'None'}</p>
+                            </div>
+                            {reservation.discount_type_c !== 'None' && (
+                              <>
+                                <div>
+                                  <p className="text-xs text-gray-600">Discount Value</p>
+                                  <p className="text-sm font-medium text-gray-900">{reservation.discount_value_c || '0'}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-gray-600">Discount Reason</p>
+                                  <p className="text-sm text-gray-700">{reservation.discount_reason_c || 'No reason provided'}</p>
+                                </div>
+                              </>
+                            )}
+                          </div>
+
+                          {/* Services */}
+                          {reservation.service_name_c && (
+                            <div className="pt-2 border-t border-gray-200 space-y-2 bg-white rounded p-2">
+                              <p className="text-xs font-semibold text-gray-600">Service Details</p>
+                              <div className="grid grid-cols-3 gap-2">
+                                <div>
+                                  <p className="text-xs text-gray-600">Service</p>
+                                  <p className="text-sm font-medium text-gray-900">{reservation.service_name_c}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-gray-600">Quantity</p>
+                                  <p className="text-sm font-medium text-gray-900">{reservation.quantity_c || 0}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-gray-600">Price/Unit</p>
+                                  <p className="text-sm font-medium text-gray-900">${reservation.price_per_unit_c || '0'}</p>
+                                </div>
+                              </div>
+                              <div className="pt-2 border-t border-gray-100">
+                                <p className="text-xs text-gray-600">Total</p>
+                                <p className="text-sm font-semibold text-primary">${reservation.total_c || '0'}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-3">Reservation Details</h4>
+                    <p className="text-sm text-gray-500">No reservations found for this guest</p>
+                  </div>
+                )}
 
                 {/* Actions */}
-                <div className="space-y-2">
-<Button 
+                <div className="space-y-2 pt-4 border-t border-gray-200">
+                  <Button 
                     className="w-full" 
                     size="sm"
                     onClick={() => handleEditGuest(selectedGuest)}
@@ -296,12 +414,12 @@ const filteredGuests = guests.filter(guest =>
                 <ApperIcon name="Users" className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                 <p className="text-gray-500">Select a guest to view details</p>
               </CardContent>
-            </Card>
-)}
+</Card>
+          )}
         </div>
       </div>
 
-{isEditorOpen && editingGuest && (
+      {isEditorOpen && editingGuest && (
         <GuestProfileEditor
           guest={editingGuest}
           onSave={handleSaveGuest}
