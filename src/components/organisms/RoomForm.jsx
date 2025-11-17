@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import Input from '@/components/atoms/Input';
-import Button from '@/components/atoms/Button';
-import Select from '@/components/atoms/Select';
-import ApperIcon from '@/components/ApperIcon';
-import { cn } from '@/utils/cn';
+import React, { useEffect, useState } from "react";
+import { cn } from "@/utils/cn";
+import ApperIcon from "@/components/ApperIcon";
+import Select from "@/components/atoms/Select";
+import Button from "@/components/atoms/Button";
+import Input from "@/components/atoms/Input";
 
 const RoomForm = ({ initialData, onSubmit, onCancel, loading }) => {
 const [formData, setFormData] = useState({
@@ -17,14 +17,22 @@ const [formData, setFormData] = useState({
     maxOccupancyAdults: '',
     maxOccupancyChildren: '',
     baseRate: '',
-    status: 'available'
+    status: 'available',
+    weekendRate: '',
+    holidayRate: '',
+    extraPersonCharge: '',
+    childRate: '',
+    earlyCheckInFee: '',
+    lateCheckoutFee: '',
+    currentActiveRate: '',
+    seasonalRates: []
   });
 
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
 
 useEffect(() => {
-    if (initialData) {
+if (initialData) {
       setFormData({
         roomId: initialData.roomId || '',
         number: initialData.number || '',
@@ -36,7 +44,15 @@ useEffect(() => {
         maxOccupancyAdults: initialData.maxOccupancyAdults?.toString() || '',
         maxOccupancyChildren: initialData.maxOccupancyChildren?.toString() || '',
         baseRate: initialData.baseRate?.toString() || initialData.pricePerNight?.toString() || '',
-        status: initialData.status || 'available'
+        status: initialData.status || 'available',
+        weekendRate: initialData.weekendRate?.toString() || '',
+        holidayRate: initialData.holidayRate?.toString() || '',
+        extraPersonCharge: initialData.extraPersonCharge?.toString() || '',
+        childRate: initialData.childRate?.toString() || '',
+        earlyCheckInFee: initialData.earlyCheckInFee?.toString() || '',
+        lateCheckoutFee: initialData.lateCheckoutFee?.toString() || '',
+        currentActiveRate: '',
+        seasonalRates: initialData.seasonalRates || []
       });
     }
   }, [initialData]);
@@ -164,6 +180,54 @@ const validateField = (name, value) => {
         }
         break;
 
+      case 'weekendRate':
+        if (value && (!/^\d+(\.\d{1,2})?$/.test(value) || parseFloat(value) <= 0)) {
+          newErrors.weekendRate = 'Weekend rate must be a valid positive amount';
+        } else {
+          delete newErrors.weekendRate;
+        }
+        break;
+
+      case 'holidayRate':
+        if (value && (!/^\d+(\.\d{1,2})?$/.test(value) || parseFloat(value) <= 0)) {
+          newErrors.holidayRate = 'Holiday rate must be a valid positive amount';
+        } else {
+          delete newErrors.holidayRate;
+        }
+        break;
+
+      case 'extraPersonCharge':
+        if (value && (!/^\d+(\.\d{1,2})?$/.test(value) || parseFloat(value) < 0)) {
+          newErrors.extraPersonCharge = 'Extra person charge must be a valid amount';
+        } else {
+          delete newErrors.extraPersonCharge;
+        }
+        break;
+
+      case 'childRate':
+        if (value && (!/^\d+(\.\d{1,2})?$/.test(value) || parseFloat(value) < 0)) {
+          newErrors.childRate = 'Child rate must be a valid amount';
+        } else {
+          delete newErrors.childRate;
+        }
+        break;
+
+      case 'earlyCheckInFee':
+        if (value && (!/^\d+(\.\d{1,2})?$/.test(value) || parseFloat(value) < 0)) {
+          newErrors.earlyCheckInFee = 'Early check-in fee must be a valid amount';
+        } else {
+          delete newErrors.earlyCheckInFee;
+        }
+        break;
+
+      case 'lateCheckoutFee':
+        if (value && (!/^\d+(\.\d{1,2})?$/.test(value) || parseFloat(value) < 0)) {
+          newErrors.lateCheckoutFee = 'Late checkout fee must be a valid amount';
+        } else {
+          delete newErrors.lateCheckoutFee;
+        }
+        break;
+
       default:
         break;
     }
@@ -172,7 +236,7 @@ const validateField = (name, value) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (e) => {
+const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     
@@ -180,6 +244,90 @@ const validateField = (name, value) => {
       validateField(name, value);
     }
   };
+
+  const isWeekend = (date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    return day === 5 || day === 6; // Friday = 5, Saturday = 6
+  };
+
+  const isHoliday = (date) => {
+    // This can be extended with actual holiday logic
+    // For now, returning false - implement based on your holiday rules
+    return false;
+  };
+
+  const calculateActiveRate = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Check weekend rate
+    if (formData.weekendRate && isWeekend(today)) {
+      return parseFloat(formData.weekendRate).toFixed(2);
+    }
+
+    // Check holiday rate
+    if (formData.holidayRate && isHoliday(today)) {
+      return parseFloat(formData.holidayRate).toFixed(2);
+    }
+
+    // Check seasonal rates
+    if (formData.seasonalRates && formData.seasonalRates.length > 0) {
+      for (const season of formData.seasonalRates) {
+        if (season.startDate && season.endDate && season.rate) {
+          const startDate = new Date(season.startDate);
+          const endDate = new Date(season.endDate);
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(23, 59, 59, 999);
+
+          if (today >= startDate && today <= endDate) {
+            return parseFloat(season.rate).toFixed(2);
+          }
+        }
+      }
+    }
+
+    // Default to base rate
+    return formData.baseRate ? parseFloat(formData.baseRate).toFixed(2) : '0.00';
+  };
+
+  const addSeason = () => {
+    const newSeason = {
+      id: Date.now(),
+      seasonName: '',
+      startDate: '',
+      endDate: '',
+      rate: ''
+    };
+    setFormData(prev => ({
+      ...prev,
+      seasonalRates: [...prev.seasonalRates, newSeason]
+    }));
+  };
+
+  const removeSeason = (seasonId) => {
+    setFormData(prev => ({
+      ...prev,
+      seasonalRates: prev.seasonalRates.filter(s => s.id !== seasonId)
+    }));
+  };
+
+  const handleSeasonChange = (seasonId, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      seasonalRates: prev.seasonalRates.map(season =>
+        season.id === seasonId ? { ...season, [field]: value } : season
+      )
+    }));
+  };
+
+  useEffect(() => {
+    const activeRate = calculateActiveRate();
+    setFormData(prev => ({
+      ...prev,
+      currentActiveRate: activeRate
+    }));
+  }, [formData.baseRate, formData.weekendRate, formData.holidayRate, formData.seasonalRates]);
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
@@ -206,8 +354,9 @@ const validateField = (name, value) => {
     }
   };
 
-  return (
+return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Base Room Information */}
 {/* Section 1: Basic Information */}
       <div className="bg-gray-50 rounded-lg p-6 mb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
@@ -472,8 +621,276 @@ const validateField = (name, value) => {
             </Select>
           </div>
         </div>
-      </div>
+</div>
 
+      {/* Pricing Section */}
+      <div className="border-t pt-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Pricing & Rates</h3>
+
+        {/* Base Rate */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Base Rate (per night) <span className="text-error">*</span>
+          </label>
+type="number"
+            name="baseRate"
+            value={formData.baseRate}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            placeholder="0.00"
+            step="0.01"
+            min="0"
+            className={cn(errors.baseRate && 'border-error')}
+          />
+          {errors.baseRate && (
+          {errors.baseRate && (
+            <p className="text-error text-sm mt-1">{errors.baseRate}</p>
+          )}
+        </div>
+
+        {/* Weekend & Holiday Rates */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Weekend Rate (Fri-Sat)
+            </label>
+type="number"
+              name="weekendRate"
+              value={formData.weekendRate}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+              className={cn(errors.weekendRate && 'border-error')}
+            />
+            {errors.weekendRate && (
+            {errors.weekendRate && (
+              <p className="text-error text-sm mt-1">{errors.weekendRate}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Holiday Rate
+            </label>
+type="number"
+              name="holidayRate"
+              value={formData.holidayRate}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+              className={cn(errors.holidayRate && 'border-error')}
+            />
+            {errors.holidayRate && (
+            {errors.holidayRate && (
+              <p className="text-error text-sm mt-1">{errors.holidayRate}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Extra Charges */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Extra Person Charge
+            </label>
+type="number"
+              name="extraPersonCharge"
+              value={formData.extraPersonCharge}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+              className={cn(errors.extraPersonCharge && 'border-error')}
+            />
+            {errors.extraPersonCharge && (
+            {errors.extraPersonCharge && (
+              <p className="text-error text-sm mt-1">{errors.extraPersonCharge}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Child Rate
+            </label>
+type="number"
+              name="childRate"
+              value={formData.childRate}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+              className={cn(errors.childRate && 'border-error')}
+            />
+            {errors.childRate && (
+            {errors.childRate && (
+              <p className="text-error text-sm mt-1">{errors.childRate}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Special Fees */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Early Check-in Fee
+            </label>
+type="number"
+              name="earlyCheckInFee"
+              value={formData.earlyCheckInFee}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+              className={cn(errors.earlyCheckInFee && 'border-error')}
+            />
+            {errors.earlyCheckInFee && (
+            {errors.earlyCheckInFee && (
+              <p className="text-error text-sm mt-1">{errors.earlyCheckInFee}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Late Checkout Fee
+            </label>
+type="number"
+              name="lateCheckoutFee"
+              value={formData.lateCheckoutFee}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+              className={cn(errors.lateCheckoutFee && 'border-error')}
+            />
+            {errors.lateCheckoutFee && (
+            {errors.lateCheckoutFee && (
+              <p className="text-error text-sm mt-1">{errors.lateCheckoutFee}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Current Active Rate */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <p className="text-sm font-medium text-gray-700 mb-2">Current Active Rate (Today)</p>
+          <p className="text-2xl font-bold text-primary">
+            ${formData.currentActiveRate}
+          </p>
+          <p className="text-xs text-gray-600 mt-2">
+            Auto-calculated based on current date (weekend/holiday/seasonal rates)
+          </p>
+        </div>
+
+        {/* Seasonal Rates */}
+        <div className="border-t pt-6">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-base font-semibold text-gray-900">Seasonal Rates</h4>
+            <Button
+              type="button"
+              onClick={addSeason}
+              variant="secondary"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <ApperIcon name="Plus" size={16} />
+              Add Season
+            </Button>
+          </div>
+
+          {formData.seasonalRates.length === 0 ? (
+            <p className="text-sm text-gray-500 text-center py-4">
+              No seasonal rates added yet. Click "Add Season" to create one.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {formData.seasonalRates.map((season) => (
+                <div
+                  key={season.id}
+                  className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+                >
+                  <div className="grid grid-cols-2 gap-4 mb-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Season Name
+                      </label>
+                      <Input
+                        type="text"
+                        value={season.seasonName}
+                        onChange={(e) =>
+                          handleSeasonChange(season.id, 'seasonName', e.target.value)
+                        }
+                        placeholder="e.g., Summer, Winter, Festival"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Rate
+                      </label>
+                      <Input
+                        type="number"
+                        value={season.rate}
+                        onChange={(e) =>
+                          handleSeasonChange(season.id, 'rate', e.target.value)
+                        }
+                        placeholder="0.00"
+                        step="0.01"
+                        min="0"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Start Date
+                      </label>
+                      <Input
+                        type="date"
+                        value={season.startDate}
+                        onChange={(e) =>
+                          handleSeasonChange(season.id, 'startDate', e.target.value)
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        End Date
+                      </label>
+                      <Input
+                        type="date"
+                        value={season.endDate}
+                        onChange={(e) =>
+                          handleSeasonChange(season.id, 'endDate', e.target.value)
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      onClick={() => removeSeason(season.id)}
+                      variant="danger"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <ApperIcon name="Trash2" size={16} />
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
       {/* Action Buttons */}
       <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
         <Button
