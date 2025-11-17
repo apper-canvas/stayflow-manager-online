@@ -52,8 +52,7 @@ useEffect(() => {
     setShowDetails(true);
   };
 
-  const handleRoomUpdated = (updatedRoom) => {
-  const handleRoomUpdated = (updatedRoom) => {
+const handleRoomUpdated = (updatedRoom) => {
     setRooms(rooms.map(r => r.Id === updatedRoom.Id ? updatedRoom : r));
     setShowDetails(false);
   };
@@ -105,8 +104,8 @@ return (
         allRooms={rooms}
       />
     </>
+</>
   );
-};
 };
 
 export default RoomsGrid;
