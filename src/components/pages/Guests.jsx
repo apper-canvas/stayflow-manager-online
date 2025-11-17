@@ -279,10 +279,10 @@ const filteredGuests = guests.filter(guest =>
                     <p className="text-sm text-gray-500">No previous stays</p>
                   ) : (
                     <div className="space-y-2">
-                      {selectedGuest.stayHistory.slice(0, 3).map((stay, index) => (
+{selectedGuest.stayHistory.slice(0, 3).map((stay, index) => (
                         <div key={index} className="text-sm bg-gray-50 p-2 rounded">
                           <div className="font-medium">Room {stay.roomNumber}</div>
-<div className="text-sm text-gray-500">
+                          <div className="text-sm text-gray-500">
                             {stay?.checkIn && !isNaN(new Date(stay.checkIn).getTime()) 
                               ? format(new Date(stay.checkIn), "MMM dd, yyyy") 
                               : "Invalid date"} - 
@@ -292,13 +292,13 @@ const filteredGuests = guests.filter(guest =>
                           </div>
                         </div>
                       ))}
-{selectedGuest.stayHistory.length > 3 && (
+                      {selectedGuest.stayHistory.length > 3 && (
                         <p className="text-xs text-gray-500 text-center">
                           +{selectedGuest.stayHistory.length - 3} more stays
                         </p>
                       )}
                     </div>
-                  </div>
+                  )}
                 )}
 
                 {/* Reservations */}
@@ -405,7 +405,7 @@ const filteredGuests = guests.filter(guest =>
                     <ApperIcon name="Calendar" className="h-4 w-4 mr-2" />
                     New Reservation
                   </Button>
-                </div>
+</div>
               </CardContent>
             </Card>
           ) : (
@@ -414,7 +414,7 @@ const filteredGuests = guests.filter(guest =>
                 <ApperIcon name="Users" className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                 <p className="text-gray-500">Select a guest to view details</p>
               </CardContent>
-</Card>
+            </Card>
           )}
         </div>
       </div>
