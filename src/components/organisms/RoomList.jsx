@@ -9,14 +9,15 @@ import Empty from '@/components/ui/Empty';
 import ErrorView from '@/components/ui/ErrorView';
 import { cn } from '@/utils/cn';
 
-const RoomList = ({ rooms, loading, error, onEdit, onDelete, onRefresh }) => {
+const RoomList = ({ rooms, loading, error, onEdit, onDelete, onRefresh, onStatusChange }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [updatingStatus, setUpdatingStatus] = useState(null);
   const itemsPerPage = 10;
 
-  const statusOptions = [
+const statusOptions = [
     { value: '', label: 'All Statuses' },
     { value: 'available', label: 'Available' },
     { value: 'occupied', label: 'Occupied' },
@@ -24,6 +25,23 @@ const RoomList = ({ rooms, loading, error, onEdit, onDelete, onRefresh }) => {
     { value: 'maintenance', label: 'Maintenance' },
     { value: 'out-of-order', label: 'Out of Order' }
   ];
+
+  const editableStatusOptions = [
+    { value: 'available', label: 'Available' },
+    { value: 'occupied', label: 'Occupied' },
+    { value: 'cleaning', label: 'Cleaning' },
+    { value: 'maintenance', label: 'Maintenance' },
+    { value: 'out-of-order', label: 'Out of Order' }
+  ];
+
+  const handleStatusChange = async (roomId, newStatus) => {
+    setUpdatingStatus(roomId);
+    try {
+      await onStatusChange(roomId, newStatus);
+    } finally {
+      setUpdatingStatus(null);
+    }
+  };
 
   const typeOptions = useMemo(() => {
     const types = [...new Set(rooms.map(room => room.type).filter(Boolean))];
@@ -212,10 +230,22 @@ const RoomList = ({ rooms, loading, error, onEdit, onDelete, onRefresh }) => {
                     <td className="py-4 px-4 text-gray-900">
                       {formatCurrency(room.baseRate || room.pricePerNight)}
                     </td>
-                    <td className="py-4 px-4">
-                      <Badge variant={getStatusBadgeVariant(room.status)}>
-                        {room.status ? room.status.charAt(0).toUpperCase() + room.status.slice(1) : 'Unknown'}
-                      </Badge>
+<td className="py-4 px-4">
+                      <Select
+                        value={room.status || 'available'}
+                        onChange={(e) => handleStatusChange(room.Id, e.target.value)}
+                        disabled={updatingStatus === room.Id}
+                        className={cn(
+                          "text-sm",
+                          updatingStatus === room.Id && "opacity-60 cursor-not-allowed"
+                        )}
+                      >
+                        {editableStatusOptions.map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </Select>
                     </td>
                     <td className="py-4 px-4 text-gray-600 text-sm">
                       {formatDate(room.lastCleaned)}
