@@ -627,12 +627,13 @@ return (
       <div className="border-t pt-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Pricing & Rates</h3>
 
-        {/* Base Rate */}
+{/* Base Rate */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Base Rate (per night) <span className="text-error">*</span>
           </label>
-type="number"
+          <Input
+            type="number"
             name="baseRate"
             value={formData.baseRate}
             onChange={handleChange}
@@ -642,7 +643,6 @@ type="number"
             min="0"
             className={cn(errors.baseRate && 'border-error')}
           />
-          {errors.baseRate && (
           {errors.baseRate && (
             <p className="text-error text-sm mt-1">{errors.baseRate}</p>
           )}
@@ -654,7 +654,8 @@ type="number"
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Weekend Rate (Fri-Sat)
             </label>
-type="number"
+            <Input
+              type="number"
               name="weekendRate"
               value={formData.weekendRate}
               onChange={handleChange}
@@ -665,7 +666,6 @@ type="number"
               className={cn(errors.weekendRate && 'border-error')}
             />
             {errors.weekendRate && (
-            {errors.weekendRate && (
               <p className="text-error text-sm mt-1">{errors.weekendRate}</p>
             )}
           </div>
@@ -674,7 +674,8 @@ type="number"
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Holiday Rate
             </label>
-type="number"
+            <Input
+              type="number"
               name="holidayRate"
               value={formData.holidayRate}
               onChange={handleChange}
@@ -684,7 +685,6 @@ type="number"
               min="0"
               className={cn(errors.holidayRate && 'border-error')}
             />
-            {errors.holidayRate && (
             {errors.holidayRate && (
               <p className="text-error text-sm mt-1">{errors.holidayRate}</p>
             )}
@@ -697,7 +697,8 @@ type="number"
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Extra Person Charge
             </label>
-type="number"
+            <Input
+              type="number"
               name="extraPersonCharge"
               value={formData.extraPersonCharge}
               onChange={handleChange}
@@ -708,7 +709,6 @@ type="number"
               className={cn(errors.extraPersonCharge && 'border-error')}
             />
             {errors.extraPersonCharge && (
-            {errors.extraPersonCharge && (
               <p className="text-error text-sm mt-1">{errors.extraPersonCharge}</p>
             )}
           </div>
@@ -717,7 +717,8 @@ type="number"
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Child Rate
             </label>
-type="number"
+            <Input
+              type="number"
               name="childRate"
               value={formData.childRate}
               onChange={handleChange}
@@ -727,7 +728,6 @@ type="number"
               min="0"
               className={cn(errors.childRate && 'border-error')}
             />
-            {errors.childRate && (
             {errors.childRate && (
               <p className="text-error text-sm mt-1">{errors.childRate}</p>
             )}
@@ -740,7 +740,8 @@ type="number"
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Early Check-in Fee
             </label>
-type="number"
+            <Input
+              type="number"
               name="earlyCheckInFee"
               value={formData.earlyCheckInFee}
               onChange={handleChange}
@@ -751,7 +752,6 @@ type="number"
               className={cn(errors.earlyCheckInFee && 'border-error')}
             />
             {errors.earlyCheckInFee && (
-            {errors.earlyCheckInFee && (
               <p className="text-error text-sm mt-1">{errors.earlyCheckInFee}</p>
             )}
           </div>
@@ -760,7 +760,8 @@ type="number"
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Late Checkout Fee
             </label>
-type="number"
+            <Input
+              type="number"
               name="lateCheckoutFee"
               value={formData.lateCheckoutFee}
               onChange={handleChange}
@@ -770,7 +771,6 @@ type="number"
               min="0"
               className={cn(errors.lateCheckoutFee && 'border-error')}
             />
-            {errors.lateCheckoutFee && (
             {errors.lateCheckoutFee && (
               <p className="text-error text-sm mt-1">{errors.lateCheckoutFee}</p>
             )}
