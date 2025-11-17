@@ -4,7 +4,7 @@ import { cn } from "@/utils/cn";
 import ApperIcon from "@/components/ApperIcon";
 import StatusBadge from "@/components/molecules/StatusBadge";
 import Button from "@/components/atoms/Button";
-import { toast } from "react-hot-toast";
+import { toast } from "react-toastify";
 
 const RoomCard = ({ room, onClick, onStatusChange }) => {
   const statusColors = {
