@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import RoomCard from "@/components/molecules/RoomCard";
+import RoomDetailsModal from "@/components/organisms/RoomDetailsModal";
 import Loading from "@/components/ui/Loading";
 import ErrorView from "@/components/ui/ErrorView";
 import Empty from "@/components/ui/Empty";
@@ -10,7 +11,8 @@ const RoomsGrid = ({ selectedFloor, statusFilter }) => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
+const [selectedRoom, setSelectedRoom] = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
   const loadRooms = async () => {
     try {
       setLoading(true);
@@ -45,9 +47,14 @@ const handleStatusChange = async (roomId, newStatus) => {
     }
   };
 
-  const handleRoomClick = (room) => {
-    // Handle room selection/detail view
-    console.log("Room selected:", room);
+const handleRoomClick = (room) => {
+    setSelectedRoom(room);
+    setShowDetails(true);
+  };
+
+  const handleRoomUpdated = (updatedRoom) => {
+    setRooms(rooms.map(r => r.Id === updatedRoom.Id ? updatedRoom : r));
+    setShowDetails(false);
   };
 
   if (loading) return <Loading />;
@@ -72,17 +79,27 @@ if (selectedFloor !== "all") {
     );
   }
 
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {filteredRooms.map((room) => (
-        <RoomCard
-          key={room.Id}
-          room={room}
-          onClick={() => handleRoomClick(room)}
-          onStatusChange={handleStatusChange}
-        />
-      ))}
-    </div>
+return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {filteredRooms.map((room) => (
+          <RoomCard
+            key={room.Id}
+            room={room}
+            onClick={() => handleRoomClick(room)}
+            onStatusChange={handleStatusChange}
+          />
+        ))}
+      </div>
+
+      <RoomDetailsModal
+        room={selectedRoom}
+        isOpen={showDetails}
+        onClose={() => setShowDetails(false)}
+        onRoomUpdated={handleRoomUpdated}
+        allRooms={rooms}
+      />
+    </>
   );
 };
 

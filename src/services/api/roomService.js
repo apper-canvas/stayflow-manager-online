@@ -21,7 +21,14 @@ fields: [
           {"field": {"Name": "maxOccupancy_c"}},
           {"field": {"Name": "baseRate_c"}},
           {"field": {"Name": "status_c"}},
-          {"field": {"Name": "lastCleaned_c"}}
+          {"field": {"Name": "lastCleaned_c"}},
+          {"field": {"Name": "roomDescription_c"}},
+          {"field": {"Name": "roomImages_c"}},
+          {"field": {"Name": "smokingStatus_c"}},
+          {"field": {"Name": "petFriendly_c"}},
+          {"field": {"Name": "accessible_c"}},
+          {"field": {"Name": "connectedRooms_c"}},
+          {"field": {"Name": "specialFeatures_c"}}
         ]
       });
 
@@ -37,7 +44,7 @@ fields: [
 
 return response.data.map(room => ({
         ...room,
-        roomId: room.room_id_c,
+roomId: room.room_id_c,
         number: room.number_c,
         type: room.type_c,
         floor: room.floor_c,
@@ -51,6 +58,13 @@ return response.data.map(room => ({
         baseRate: room.baseRate_c,
         status: room.status_c,
         lastCleaned: room.lastCleaned_c,
+        roomDescription: room.roomDescription_c,
+        roomImages: room.roomImages_c,
+        smokingStatus: room.smokingStatus_c,
+        petFriendly: room.petFriendly_c,
+        accessible: room.accessible_c,
+        connectedRooms: room.connectedRooms_c,
+        specialFeatures: room.specialFeatures_c,
       }));
     } catch (error) {
       console.error("Error fetching rooms:", error?.response?.data?.message || error);
@@ -62,7 +76,7 @@ async getById(id) {
     try {
       const apperClient = getApperClient();
       const response = await apperClient.getRecordById('rooms_c', id, {
-        fields: [
+fields: [
           {"field": {"Name": "Name"}},
           {"field": {"Name": "room_id_c"}},
           {"field": {"Name": "number_c"}},
@@ -76,7 +90,14 @@ async getById(id) {
           {"field": {"Name": "maxOccupancy_c"}},
           {"field": {"Name": "baseRate_c"}},
           {"field": {"Name": "status_c"}},
-          {"field": {"Name": "lastCleaned_c"}}
+          {"field": {"Name": "lastCleaned_c"}},
+          {"field": {"Name": "roomDescription_c"}},
+          {"field": {"Name": "roomImages_c"}},
+          {"field": {"Name": "smokingStatus_c"}},
+          {"field": {"Name": "petFriendly_c"}},
+          {"field": {"Name": "accessible_c"}},
+          {"field": {"Name": "connectedRooms_c"}},
+          {"field": {"Name": "specialFeatures_c"}}
         ]
       });
 
@@ -86,7 +107,7 @@ async getById(id) {
 
       const room = response.data;
       return {
-        ...room,
+...room,
         roomId: room.room_id_c,
         number: room.number_c,
         type: room.type_c,
@@ -100,6 +121,13 @@ async getById(id) {
         pricePerNight: room.baseRate_c,
         baseRate: room.baseRate_c,
         lastCleaned: room.lastCleaned_c,
+        roomDescription: room.roomDescription_c,
+        roomImages: room.roomImages_c,
+        smokingStatus: room.smokingStatus_c,
+        petFriendly: room.petFriendly_c,
+        accessible: room.accessible_c,
+        connectedRooms: room.connectedRooms_c,
+        specialFeatures: room.specialFeatures_c,
       };
     } catch (error) {
       console.error("Error fetching room:", error?.response?.data?.message || error);
@@ -125,7 +153,14 @@ const updateableData = {
         maxOccupancy_c: roomData.maxOccupancy ? parseInt(roomData.maxOccupancy) : null,
         baseRate_c: roomData.baseRate ? parseFloat(roomData.baseRate) : (roomData.pricePerNight ? parseFloat(roomData.pricePerNight) : null),
         status_c: roomData.status || 'available',
-        lastCleaned_c: roomData.lastCleaned || new Date().toISOString()
+lastCleaned_c: roomData.lastCleaned || new Date().toISOString(),
+        roomDescription_c: roomData.roomDescription,
+        roomImages_c: roomData.roomImages,
+        smokingStatus_c: roomData.smokingStatus,
+        petFriendly_c: roomData.petFriendly,
+        accessible_c: roomData.accessible,
+        connectedRooms_c: roomData.connectedRooms,
+        specialFeatures_c: roomData.specialFeatures
       };
 Object.keys(updateableData).forEach(key => {
         if (updateableData[key] === null || updateableData[key] === undefined || updateableData[key] === '') {
@@ -179,8 +214,15 @@ const apperClient = getApperClient();
         maximum_occupancy_children_c: updatedData.maxOccupancyChildren ? parseInt(updatedData.maxOccupancyChildren) : undefined,
         maxOccupancy_c: updatedData.maxOccupancy ? parseInt(updatedData.maxOccupancy) : undefined,
         baseRate_c: updatedData.baseRate ? parseFloat(updatedData.baseRate) : (updatedData.pricePerNight ? parseFloat(updatedData.pricePerNight) : undefined),
-        status_c: updatedData.status,
-        lastCleaned_c: updatedData.lastCleaned
+status_c: updatedData.status,
+        lastCleaned_c: updatedData.lastCleaned,
+        roomDescription_c: updatedData.roomDescription_c,
+        roomImages_c: updatedData.roomImages_c,
+        smokingStatus_c: updatedData.smokingStatus_c,
+        petFriendly_c: updatedData.petFriendly_c,
+        accessible_c: updatedData.accessible_c,
+        connectedRooms_c: updatedData.connectedRooms_c,
+        specialFeatures_c: updatedData.specialFeatures_c
       };
 
       // Remove fields with null, undefined, or empty string values
