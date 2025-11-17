@@ -35,8 +35,6 @@ fields: [
         return [];
       }
 
-      // Transform data to match UI expectations
-// Transform data to match UI expectations
 return response.data.map(room => ({
         ...room,
         roomId: room.room_id_c,
@@ -52,15 +50,19 @@ return response.data.map(room => ({
         pricePerNight: room.baseRate_c,
         baseRate: room.baseRate_c,
         status: room.status_c,
-        lastCleaned: room.lastCleaned_c
+        lastCleaned: room.lastCleaned_c,
       }));
     } catch (error) {
+      console.error("Error fetching rooms:", error?.response?.data?.message || error);
+      return [];
+    }
+  },
 
-  async getById(id) {
+async getById(id) {
     try {
       const apperClient = getApperClient();
       const response = await apperClient.getRecordById('rooms_c', id, {
-fields: [
+        fields: [
           {"field": {"Name": "Name"}},
           {"field": {"Name": "room_id_c"}},
           {"field": {"Name": "number_c"}},
@@ -82,7 +84,7 @@ fields: [
         return null;
       }
 
-const room = response.data;
+      const room = response.data;
       return {
         ...room,
         roomId: room.room_id_c,
@@ -95,20 +97,21 @@ const room = response.data;
         maxOccupancyAdults: room.maximum_occupancy_adults_c,
         maxOccupancyChildren: room.maximum_occupancy_children_c,
         maxOccupancy: room.maxOccupancy_c,
-pricePerNight: room.baseRate_c,
+        pricePerNight: room.baseRate_c,
         baseRate: room.baseRate_c,
-        status: room.status_c,
-        lastCleaned: room.lastCleaned_c
+        lastCleaned: room.lastCleaned_c,
       };
     } catch (error) {
+      console.error("Error fetching room:", error?.response?.data?.message || error);
+      return null;
+    }
+  },
 
   async create(roomData) {
     try {
       const apperClient = getApperClient();
       
-      // Filter only updateable fields
-// Filter only updateable fields
-      const updateableData = {
+const updateableData = {
         Name: roomData.number ? `Room ${roomData.number}` : `Room-${Date.now()}`,
         room_id_c: roomData.roomId || '',
         number_c: roomData.number || '',
@@ -120,13 +123,20 @@ pricePerNight: room.baseRate_c,
         maximum_occupancy_adults_c: roomData.maxOccupancyAdults ? parseInt(roomData.maxOccupancyAdults) : null,
         maximum_occupancy_children_c: roomData.maxOccupancyChildren ? parseInt(roomData.maxOccupancyChildren) : null,
         maxOccupancy_c: roomData.maxOccupancy ? parseInt(roomData.maxOccupancy) : null,
-baseRate_c: roomData.baseRate ? parseFloat(roomData.baseRate) : (roomData.pricePerNight ? parseFloat(roomData.pricePerNight) : null),
+        baseRate_c: roomData.baseRate ? parseFloat(roomData.baseRate) : (roomData.pricePerNight ? parseFloat(roomData.pricePerNight) : null),
         status_c: roomData.status || 'available',
         lastCleaned_c: roomData.lastCleaned || new Date().toISOString()
       };
+Object.keys(updateableData).forEach(key => {
+        if (updateableData[key] === null || updateableData[key] === undefined || updateableData[key] === '') {
+          delete updateableData[key];
+        }
+      });
 
-      // Remove fields with null, undefined, or empty string values
-      Object.keys(updateableData).forEach(key => {
+      const response = await apperClient.createRecord('rooms_c', {
+      const response = await apperClient.createRecord('rooms_c', {
+        records: [updateableData]
+      });
 
       if (!response.success) {
         console.error("Error creating room:", response.message);
@@ -155,9 +165,8 @@ baseRate_c: roomData.baseRate ? parseFloat(roomData.baseRate) : (roomData.priceP
 
   async update(id, updatedData) {
     try {
-      const apperClient = getApperClient();
+const apperClient = getApperClient();
       
-// Filter only updateable fields
       const updateableFields = {
         Id: id,
         room_id_c: updatedData.roomId,
@@ -169,7 +178,7 @@ baseRate_c: roomData.baseRate ? parseFloat(roomData.baseRate) : (roomData.priceP
         bed_configuration_c: updatedData.bedConfiguration,
         maximum_occupancy_adults_c: updatedData.maxOccupancyAdults ? parseInt(updatedData.maxOccupancyAdults) : undefined,
         maximum_occupancy_children_c: updatedData.maxOccupancyChildren ? parseInt(updatedData.maxOccupancyChildren) : undefined,
-maxOccupancy_c: updatedData.maxOccupancy ? parseInt(updatedData.maxOccupancy) : undefined,
+        maxOccupancy_c: updatedData.maxOccupancy ? parseInt(updatedData.maxOccupancy) : undefined,
         baseRate_c: updatedData.baseRate ? parseFloat(updatedData.baseRate) : (updatedData.pricePerNight ? parseFloat(updatedData.pricePerNight) : undefined),
         status_c: updatedData.status,
         lastCleaned_c: updatedData.lastCleaned
@@ -177,6 +186,14 @@ maxOccupancy_c: updatedData.maxOccupancy ? parseInt(updatedData.maxOccupancy) : 
 
       // Remove fields with null, undefined, or empty string values
       Object.keys(updateableFields).forEach(key => {
+        if (updateableFields[key] === null || updateableFields[key] === undefined || updateableFields[key] === '') {
+          delete updateableFields[key];
+        }
+      });
+
+      const response = await apperClient.updateRecord('rooms_c', {
+        records: [updateableFields]
+      });
 
       if (!response.success) {
         console.error("Error updating room:", response.message);
