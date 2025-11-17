@@ -14,11 +14,11 @@ const [formData, setFormData] = useState({
     allergies: guest?.allergies || [],
     stayNotes: guest?.stayNotes || "",
     address: guest?.address || {},
-    guestId: guest?.guestId || '',
-    guestType: guest?.guestType || '',
-    companyName: guest?.companyName || '',
-    gstNumberTaxId: guest?.gstNumberTaxId || '',
-    designationJobTitle: guest?.designationJobTitle || ''
+guestId: guest?.guest_id_c || '',
+    guestType: guest?.guest_type_c || '',
+    companyName: guest?.company_name_c || '',
+    gstNumberTaxId: guest?.gst_number_tax_id_c || '',
+    designationJobTitle: guest?.designation_job_title_c || ''
   });
 
   const [businessDetailsOpen, setBusinessDetailsOpen] = useState(false);
@@ -205,6 +205,12 @@ const renderBasicInfo = () => (
         onChange={(e) => handleInputChange("phone", e.target.value)}
         error={errors.phone}
         required
+      />
+<FormField
+        label="Guest ID"
+        id="guestId"
+        value={formData.guestId}
+        onChange={(e) => handleInputChange("guestId", e.target.value)}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
