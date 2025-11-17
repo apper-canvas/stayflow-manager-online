@@ -9,7 +9,6 @@ import "./index.css";
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Provider store={store}>
     <App />
-    456
     <ToastContainer 
       position="top-right"
       autoClose={3000}
