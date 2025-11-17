@@ -134,7 +134,6 @@ Object.keys(updateableData).forEach(key => {
       });
 
       const response = await apperClient.createRecord('rooms_c', {
-      const response = await apperClient.createRecord('rooms_c', {
         records: [updateableData]
       });
 
