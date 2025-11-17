@@ -4,6 +4,7 @@ import { cn } from "@/utils/cn";
 import ApperIcon from "@/components/ApperIcon";
 import StatusBadge from "@/components/molecules/StatusBadge";
 import Button from "@/components/atoms/Button";
+import { toast } from "react-hot-toast";
 
 const RoomCard = ({ room, onClick, onStatusChange }) => {
   const statusColors = {
@@ -13,22 +14,28 @@ const RoomCard = ({ room, onClick, onStatusChange }) => {
     maintenance: "border-error"
   };
 
-  const handleEdit = (e) => {
+const handleEdit = (e) => {
     e.stopPropagation();
-    onClick?.();
+    onClick?.(room);
   };
 
   const handleBook = (e) => {
     e.stopPropagation();
-    // Book action - can be extended with navigation or modal
-    console.info("Book room:", room.number);
+    if (room.status !== 'available') {
+      toast.error('Room is not available for booking');
+      return;
+    }
+    // Navigate to new reservation with room pre-selected
+    window.location.href = `/new-reservation?roomId=${room.Id || room.id}&roomNumber=${room.number || room.number_c}`;
   };
 
   const handleBlock = (e) => {
     e.stopPropagation();
-    onStatusChange?.(room.Id, "maintenance");
-  };
-
+    if (window.confirm('Are you sure you want to block this room for maintenance?')) {
+      onStatusChange?.(room.Id || room.id, 'maintenance');
+      toast.success(`Room ${room.number || room.number_c} has been blocked for maintenance`);
+    }
+};
   return (
     <Card
     className={cn(
