@@ -107,9 +107,9 @@ filteredReservations = filteredReservations.filter(r =>
   }
 
 return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200" onClick={(e) => e.stopPropagation()}>
+<div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+        <table className="w-full divide-y divide-gray-200 border-collapse" onClick={(e) => e.stopPropagation()}>
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
