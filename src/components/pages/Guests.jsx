@@ -25,6 +25,7 @@ const Guests = () => {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [reservationData, setReservationData] = useState([]);
   const [reservationLoading, setReservationLoading] = useState(false);
+  const [deletingGuest, setDeletingGuest] = useState(null);
 const loadGuests = async () => {
   try {
     setLoading(true);
@@ -106,8 +107,36 @@ const handleSaveGuest = async (updatedGuest) => {
       const action = updatedGuest.Id ? "update" : "create";
       toast.error(error.message || `Failed to ${action} guest`);
     }
-  };
+};
 
+  const handleDeleteGuest = async (guest, event) => {
+    // Prevent card selection when clicking delete
+    event.stopPropagation();
+    
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete ${guest.firstName} ${guest.lastName}? This action cannot be undone.`
+    );
+    
+    if (!confirmDelete) return;
+    
+    try {
+      setDeletingGuest(guest.Id);
+      await guestService.delete(guest.Id);
+      toast.success("Guest deleted successfully");
+      
+      // Clear selected guest if it was the deleted one
+      if (selectedGuest?.Id === guest.Id) {
+        setSelectedGuest(null);
+      }
+      
+      // Reload guests list
+      await loadGuests();
+    } catch (error) {
+      toast.error(error.message || "Failed to delete guest");
+    } finally {
+      setDeletingGuest(null);
+    }
+  };
 useEffect(() => {
   loadGuests();
 }, []);
@@ -170,7 +199,7 @@ const filteredGuests = guests.filter(guest =>
                     className={`cursor-pointer transition-all duration-200 ${selectedGuest?.Id === guest.Id ? "ring-2 ring-primary" : ""}`}
                     onClick={() => setSelectedGuest(guest)}>
                     <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
+<div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <div className="bg-primary/10 rounded-full p-3">
                                     <ApperIcon name="User" className="h-6 w-6 text-primary" />
@@ -183,13 +212,42 @@ const filteredGuests = guests.filter(guest =>
                                     <p className="text-sm text-gray-500">{guest.phone}</p>
                                 </div>
                             </div>
-                            <div className="text-right">
-                                {guest.vipStatus && <Badge variant="warning" className="mb-2">
-                                    <ApperIcon name="Crown" className="h-3 w-3 mr-1" />VIP
-                                                              </Badge>}
-                                <p className="text-sm text-gray-500">
-                                    {guest.stayHistory.length}stays
-                                                            </p>
+                            <div className="flex flex-col items-end gap-2">
+                                <div className="flex items-center gap-1">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-8 w-8 p-0 opacity-70 hover:opacity-100 transition-opacity"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleEditGuest(guest);
+                                        }}
+                                        disabled={deletingGuest === guest.Id}
+                                    >
+                                        <ApperIcon name="Edit" className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-8 w-8 p-0 opacity-70 hover:opacity-100 hover:text-error hover:border-error transition-all"
+                                        onClick={(e) => handleDeleteGuest(guest, e)}
+                                        disabled={deletingGuest === guest.Id}
+                                    >
+                                        {deletingGuest === guest.Id ? (
+                                            <ApperIcon name="Loader2" className="h-3 w-3 animate-spin" />
+                                        ) : (
+                                            <ApperIcon name="Trash2" className="h-3 w-3" />
+                                        )}
+                                    </Button>
+                                </div>
+                                <div className="text-right">
+                                    {guest.vipStatus && <Badge variant="warning" className="mb-1">
+                                        <ApperIcon name="Crown" className="h-3 w-3 mr-1" />VIP
+                                    </Badge>}
+                                    <p className="text-sm text-gray-500">
+                                        {guest.stayHistory.length} stays
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </CardContent>
