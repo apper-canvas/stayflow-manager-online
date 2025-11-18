@@ -8,6 +8,7 @@ import Loading from "@/components/ui/Loading";
 import Empty from "@/components/ui/Empty";
 import ErrorView from "@/components/ui/ErrorView";
 import EditReservationModal from "@/components/organisms/EditReservationModal";
+import InvoiceGenerationModal from "@/components/organisms/InvoiceGenerationModal";
 import Select from "@/components/atoms/Select";
 import Button from "@/components/atoms/Button";
 
@@ -18,6 +19,8 @@ const [loading, setLoading] = useState(true);
   const [editModalOpen, setEditModalOpen] = useState(false);
 const [updatingPayment, setUpdatingPayment] = useState(null);
   const [selectedReservation, setSelectedReservation] = useState(null);
+  const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
+  const [checkoutReservation, setCheckoutReservation] = useState(null);
 
   const loadReservations = async () => {
     try {
@@ -64,9 +67,7 @@ const handlePaymentStatusChange = async (reservation, newStatus) => {
       setUpdatingPayment(null);
     }
   };
-
-
-  const handleEdit = (reservation) => {
+const handleEdit = (reservation) => {
     setSelectedReservation(reservation);
     setEditModalOpen(true);
   };
@@ -74,6 +75,31 @@ const handlePaymentStatusChange = async (reservation, newStatus) => {
   const handleEditModalClose = () => {
     setEditModalOpen(false);
     setSelectedReservation(null);
+  };
+
+  const handleCheckout = (reservation) => {
+    setCheckoutReservation(reservation);
+    setInvoiceModalOpen(true);
+  };
+
+  const handleInvoiceModalClose = () => {
+    setInvoiceModalOpen(false);
+    setCheckoutReservation(null);
+  };
+
+  const handleInvoiceGenerated = async (invoiceData) => {
+    try {
+      // Update reservation status to checked out
+      await reservationService.update(checkoutReservation.Id, { 
+        status_c: 'checkedout' 
+      });
+      
+      // Refresh reservations list
+      await loadReservations();
+      toast.success("Guest checked out successfully!");
+    } catch (error) {
+      toast.error("Failed to update reservation status");
+    }
   };
 
 const handleReservationUpdate = async (updatedReservation) => {
@@ -227,6 +253,18 @@ return (
                       <ApperIcon name="Edit" className="h-3 w-3 mr-1" />
                       Edit
                     </Button>
+                    
+                    {(reservation.status_c === 'confirmed' || reservation.status_c === 'checkedin') && (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleCheckout(reservation)}
+                        className="text-green-600 border-green-300 hover:bg-green-50"
+                      >
+                        <ApperIcon name="Receipt" className="h-3 w-3 mr-1" />
+                        Check Out
+                      </Button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -235,13 +273,19 @@ return (
         </table>
       </div>
       
-      <EditReservationModal
+<EditReservationModal
         reservation={selectedReservation}
         isOpen={editModalOpen}
 onClose={handleEditModalClose}
         onUpdate={handleReservationUpdate}
       />
 
+      <InvoiceGenerationModal
+        reservation={checkoutReservation}
+        isOpen={invoiceModalOpen}
+        onClose={handleInvoiceModalClose}
+        onInvoiceGenerated={handleInvoiceGenerated}
+      />
     </div>
   );
 };
