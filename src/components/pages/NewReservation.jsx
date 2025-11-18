@@ -15,7 +15,6 @@ import Select from "@/components/atoms/Select";
 import Button from "@/components/atoms/Button";
 import SearchableSelect from "@/components/atoms/SearchableSelect";
 import Input from "@/components/atoms/Input";
-
 const NewReservation = () => {
   const navigate = useNavigate();
 const [loading, setLoading] = useState(false);
@@ -47,9 +46,11 @@ const [formData, setFormData] = useState({
   });
 
   const [formErrors, setFormErrors] = useState({});
-
+  const [rateBreakdown, setRateBreakdown] = useState([]);
+  const [selectedRoomDetails, setSelectedRoomDetails] = useState(null);
+  const [rateCalculating, setRateCalculating] = useState(false);
   // Load initial data
-  useEffect(() => {
+useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
@@ -59,7 +60,7 @@ const [formData, setFormData] = useState({
         ]);
         setGuests(guestsData);
         setRooms(roomsData);
-setAvailableRooms(roomsData.filter(room => room.status === 'available'));
+        setAvailableRooms(roomsData.filter(room => room.status_c === 'available' || room.status === 'available'));
       } catch (error) {
         toast.error('Failed to load form data');
       } finally {
@@ -69,35 +70,101 @@ setAvailableRooms(roomsData.filter(room => room.status === 'available'));
     loadData();
   }, []);
 
-  // Calculate total amount when dates or room changes
-useEffect(() => {
-    // Reset total amount to 0 by default
-    setFormData(prev => ({ ...prev, totalAmount: 0, number_of_nights_c: 0 }));
+  // Helper function to determine rate type based on date
+  const getRateType = (date) => {
+    const dayOfWeek = date.getDay();
+    const isWeekend = dayOfWeek === 5 || dayOfWeek === 6; // Friday or Saturday
     
-    if (formData.checkInDate && formData.checkOutDate && formData.roomId_c) {
-      const checkIn = new Date(formData.checkInDate);
-      const checkOut = new Date(formData.checkOutDate);
-      
-      // Validate dates are valid
-      if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) {
-        return; // Invalid dates, keep total at 0
-      }
-      
+    // Check for holidays (simplified - you can expand this)
+    const month = date.getMonth();
+    const day = date.getDate();
+    const isHoliday = (month === 11 && day === 25) || (month === 0 && day === 1); // Christmas, New Year
+    
+    // Check for seasonal rates (simplified - summer months)
+    const isSummer = month >= 5 && month <= 8; // June-September
+    
+    if (isHoliday) return { type: 'holiday', multiplier: 1.5, label: 'Holiday Rate' };
+    if (isSummer) return { type: 'seasonal', multiplier: 1.3, label: 'Seasonal Rate (Summer)' };
+    if (isWeekend) return { type: 'weekend', multiplier: 1.2, label: 'Weekend Rate' };
+    return { type: 'base', multiplier: 1.0, label: 'Base Rate' };
+  };
+
+  // Calculate room rates with breakdown
+  const calculateRoomRates = async (roomId, checkInDate, checkOutDate) => {
+    if (!roomId || !checkInDate || !checkOutDate) {
+      setRateBreakdown([]);
+      setSelectedRoomDetails(null);
+      return;
+    }
+
+    setRateCalculating(true);
+    try {
+      const room = rooms.find(r => r.Id === parseInt(roomId));
+      if (!room) return;
+
+      const checkIn = new Date(checkInDate);
+      const checkOut = new Date(checkOutDate);
       const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-      const roomId = parseInt(formData.roomId_c);
-      const selectedRoom = rooms.find(room => room.Id === roomId);
-      
-      if (selectedRoom && nights > 0 && typeof selectedRoom.pricePerNight === 'number') {
-        const roomTotal = nights * selectedRoom.pricePerNight;
-        // Final safety check to ensure total is a valid number
-        if (!isNaN(roomTotal) && isFinite(roomTotal)) {
-          setFormData(prev => ({ ...prev, totalAmount: roomTotal, number_of_nights_c: nights }));
-        }
+
+      if (nights <= 0) {
+        setRateBreakdown([]);
+        return;
       }
+
+      const baseRate = room.baseRate_c || room.pricePerNight || 0;
+      const breakdown = [];
+      let totalAmount = 0;
+
+      for (let i = 0; i < nights; i++) {
+        const currentDate = new Date(checkIn);
+        currentDate.setDate(checkIn.getDate() + i);
+        
+        const rateInfo = getRateType(currentDate);
+        const nightlyRate = baseRate * rateInfo.multiplier;
+        
+        breakdown.push({
+          night: i + 1,
+          date: currentDate.toLocaleDateString(),
+          rate: nightlyRate,
+          rateType: rateInfo.label,
+          baseRate: baseRate
+        });
+        
+        totalAmount += nightlyRate;
+      }
+
+      setRateBreakdown(breakdown);
+      setSelectedRoomDetails({
+        ...room,
+        calculatedTotal: totalAmount
+      });
+      
+      setFormData(prev => ({ 
+        ...prev, 
+        totalAmount: totalAmount, 
+        number_of_nights_c: nights 
+      }));
+
+    } catch (error) {
+      toast.error('Failed to calculate room rates');
+      setRateBreakdown([]);
+    } finally {
+      setRateCalculating(false);
+    }
+  };
+
+  // Auto-fetch rates when room or dates change
+  useEffect(() => {
+    if (formData.roomId_c && formData.checkInDate && formData.checkOutDate) {
+      calculateRoomRates(formData.roomId_c, formData.checkInDate, formData.checkOutDate);
+    } else {
+      setFormData(prev => ({ ...prev, totalAmount: 0, number_of_nights_c: 0 }));
+      setRateBreakdown([]);
+      setSelectedRoomDetails(null);
     }
   }, [formData.checkInDate, formData.checkOutDate, formData.roomId_c, rooms]);
 
-  // Calculate complete total including all charges and discounts
+  // Calculate final total with taxes and charges
   useEffect(() => {
     const roomTotal = formData.totalAmount || 0;
     
@@ -125,6 +192,38 @@ useEffect(() => {
     }));
   }, [formData.totalAmount, formData.tax_percentage_c, formData.service_charge_percentage_c, formData.services, formData.discount_value_c]);
 
+// Check room availability for selected dates
+  const checkRoomAvailability = async (roomId, checkInDate, checkOutDate) => {
+    try {
+      // Get all reservations for the selected room
+      const roomReservations = await reservationService.getAll();
+      const roomBookings = roomReservations.filter(res => 
+        res.roomId_c === parseInt(roomId) && 
+        res.status !== 'cancelled' && 
+        res.status !== 'checked-out'
+      );
+
+      const checkIn = new Date(checkInDate);
+      const checkOut = new Date(checkOutDate);
+
+      // Check for conflicts
+      for (const booking of roomBookings) {
+        const bookingCheckIn = new Date(booking.checkInDate);
+        const bookingCheckOut = new Date(booking.checkOutDate);
+
+        // Check if dates overlap
+        if (checkIn < bookingCheckOut && checkOut > bookingCheckIn) {
+          return false; // Room not available
+        }
+      }
+
+      return true; // Room available
+    } catch (error) {
+      console.error('Error checking room availability:', error);
+      return false; // Assume not available on error
+    }
+  };
+
 const validateForm = () => {
     const errors = {};
 
@@ -145,13 +244,29 @@ const validateForm = () => {
       if (checkOut <= checkIn) {
         errors.checkOutDate = "Check-out date must be after check-in date";
       }
+
+      // Validate maximum stay duration (e.g., 30 days)
+      const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+      if (nights > 30) {
+        errors.checkOutDate = "Maximum stay duration is 30 nights";
+      }
     }
 
     if (formData.adults < 1) errors.adults = "At least 1 adult is required";
     if (formData.children < 0) errors.children = "Children count cannot be negative";
+    
+    // Validate occupancy against room capacity
+    if (selectedRoomDetails && (formData.adults + formData.children) > (selectedRoomDetails.maxOccupancy_c || selectedRoomDetails.maxOccupancy || 4)) {
+      errors.adults = `Room capacity exceeded. Maximum ${selectedRoomDetails.maxOccupancy_c || selectedRoomDetails.maxOccupancy || 4} guests allowed`;
+    }
+    
     if (formData.service_charge_percentage_c < 0) errors.service_charge_percentage_c = "Service charge cannot be negative";
     if (formData.discount_type_c !== 'None' && formData.discount_value_c <= 0) {
       errors.discount_value_c = "Discount value must be greater than 0";
+    }
+
+    if (formData.totalAmount <= 0) {
+      errors.roomId_c = "Unable to calculate room rate. Please verify room selection and dates.";
     }
 
     setFormErrors(errors);
@@ -312,31 +427,31 @@ const selectedRoom = rooms.find(room => room.Id === parseInt(formData.roomId_c))
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Guest & Room Selection */}
+{/* Guest & Room Selection */}
         <Card className="p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Guest & Room Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-<label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Guest *
               </label>
-<SearchableSelect
-value={formData.guestId_c}
+              <SearchableSelect
+                value={formData.guestId_c}
                 onChange={(e) => handleInputChange("guestId_c", e.target.value)}
                 options={[
                   { value: '', label: 'Choose a guest...' },
                   { value: 'new-guest', label: '+ New Guest', isNewGuestOption: true },
                   ...guests.map((guest) => ({
-value: guest.Id,
+                    value: guest.Id,
                     label: `${guest.firstName_c || guest.Name} ${guest.lastName_c || ''} - ${guest.email_c || guest.email}`,
                     guest: guest
                   }))
                 ]}
-placeholder="Search guests by name or email..."
+                placeholder="Search guests by name or email..."
                 filterOption={(option, searchTerm) => {
                   if (!option.guest && !option.isNewGuestOption) return true; // Keep system options
                   if (option.isNewGuestOption) return true; // Always show "New Guest" option
-const searchLower = searchTerm.toLowerCase();
+                  const searchLower = searchTerm.toLowerCase();
                   const guest = option.guest;
                   return (
                     (guest.firstName_c || guest.Name || '')?.toLowerCase().includes(searchLower) ||
@@ -344,23 +459,24 @@ const searchLower = searchTerm.toLowerCase();
                     (guest.email_c || guest.email || '')?.toLowerCase().includes(searchLower)
                   );
                 }}
-className={formErrors.guestId_c ? "border-red-500" : ""}
+                className={formErrors.guestId_c ? "border-red-500" : ""}
               />
               {formErrors.guestId_c && <p className="text-red-500 text-sm mt-1">{formErrors.guestId_c}</p>}
             </div>
 
-<div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Room *
+                {rateCalculating && <span className="text-sm text-blue-600 ml-2">(Calculating rates...)</span>}
               </label>
-<SearchableSelect
-value={formData.roomId_c}
+              <SearchableSelect
+                value={formData.roomId_c}
                 onChange={(e) => handleInputChange("roomId_c", e.target.value)}
                 options={[
                   { value: '', label: 'Choose a room...' },
                   ...availableRooms.map((room) => ({
-value: room.Id,
-                    label: `Room ${room.number_c || room.number} - ${room.type_c || room.type} ($${room.baseRate_c || room.pricePerNight}/night)`,
+                    value: room.Id,
+                    label: `Room ${room.number_c || room.number} - ${room.type_c || room.type} (Base: $${room.baseRate_c || room.pricePerNight}/night)`,
                     room: room
                   }))
                 ]}
@@ -369,15 +485,38 @@ value: room.Id,
                   if (!option.room) return true; // Keep the "Choose a room..." option
                   const searchLower = searchTerm.toLowerCase();
                   const room = option.room;
-return (
+                  return (
                     (room.number_c || room.number || '')?.toString().toLowerCase().includes(searchLower) ||
                     (room.type_c || room.type || '')?.toLowerCase().includes(searchLower) ||
                     (room.baseRate_c || room.pricePerNight || '')?.toString().includes(searchTerm)
                   );
                 }}
-className={formErrors.roomId_c ? "border-red-500" : ""}
+                className={formErrors.roomId_c ? "border-red-500" : ""}
               />
               {formErrors.roomId_c && <p className="text-red-500 text-sm mt-1">{formErrors.roomId_c}</p>}
+              
+              {/* Room Details Display */}
+              {selectedRoomDetails && (
+                <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h4 className="font-medium text-gray-900">
+                        Room {selectedRoomDetails.number_c || selectedRoomDetails.number} - {selectedRoomDetails.type_c || selectedRoomDetails.type}
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        Base Rate: ${selectedRoomDetails.baseRate_c || selectedRoomDetails.pricePerNight}/night | 
+                        Max Occupancy: {selectedRoomDetails.maxOccupancy_c || selectedRoomDetails.maxOccupancy || 4} guests
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-600">Room Total</div>
+                      <div className="font-bold text-lg text-blue-600">
+                        ${selectedRoomDetails.calculatedTotal?.toFixed(2) || '0.00'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </Card>
@@ -473,6 +612,36 @@ className={formErrors.roomId_c ? "border-red-500" : ""}
           />
           <p className="text-xs text-gray-500 mt-1">Auto-calculated from check-in and check-out dates</p>
         </FormField>
+
+        {/* Rate Breakdown Section */}
+        {rateBreakdown.length > 0 && (
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+              <ApperIcon name="Calculator" size={20} className="mr-2" />
+              Rate Breakdown by Night
+            </h2>
+            <div className="space-y-3">
+              {rateBreakdown.map((night) => (
+                <div key={night.night} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <span className="font-medium">Night {night.night}</span>
+                    <span className="text-gray-600 ml-2">({night.date})</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-lg">${night.rate.toFixed(2)}</div>
+                    <div className="text-xs text-gray-600">{night.rateType}</div>
+                  </div>
+                </div>
+              ))}
+              <div className="border-t pt-3 mt-3">
+                <div className="flex justify-between items-center text-lg font-bold">
+                  <span>Total Room Charges:</span>
+                  <span className="text-blue-600">${formData.totalAmount.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* Tax & Service Charges Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -680,9 +849,12 @@ className={formErrors.roomId_c ? "border-red-500" : ""}
         </Card>
 
 {/* Booking Summary */}
-        {selectedRoom && formData.checkInDate && formData.checkOutDate && (
-          <Card className="p-6 bg-gray-50">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Booking Summary</h2>
+{selectedRoom && formData.checkInDate && formData.checkOutDate && (
+          <Card className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+              <ApperIcon name="FileText" size={20} className="mr-2" />
+              Booking Summary
+            </h2>
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Reservation ID:</span>
@@ -715,43 +887,57 @@ className={formErrors.roomId_c ? "border-red-500" : ""}
                   {formData.children > 0 && `, ${formData.children} Child${formData.children > 1 ? 'ren' : ''}`}
                 </span>
               </div>
-              <div className="border-t pt-3">
-<div className="flex justify-between">
-                  <span className="text-gray-600">Room Total:</span>
-                  <span className="font-medium">${formData.totalAmount.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Tax ({formData.tax_percentage_c}):</span>
-                  <span className="font-medium">
-                    ${(formData.totalAmount * (parseInt(formData.tax_percentage_c) || 5) / 100).toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Service Charge ({formData.service_charge_percentage_c}%):</span>
-                  <span className="font-medium">
-                    ${(formData.totalAmount * (parseFloat(formData.service_charge_percentage_c) || 0) / 100).toFixed(2)}
-                  </span>
-                </div>
-                {formData.services.length > 0 && (
+              <div className="border-t border-blue-200 pt-4 mt-4">
+                <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Additional Services:</span>
+                    <span className="text-gray-700 font-medium">Room Charges:</span>
+                    <span className="font-semibold">${formData.totalAmount.toFixed(2)}</span>
+                  </div>
+                  
+                  {rateBreakdown.length > 1 && (
+                    <div className="text-xs text-gray-600 ml-4">
+                      {rateBreakdown.map(night => (
+                        <div key={night.night} className="flex justify-between">
+                          <span>Night {night.night} ({night.rateType}):</span>
+                          <span>${night.rate.toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Tax ({formData.tax_percentage_c}):</span>
                     <span className="font-medium">
-                      ${formData.services.reduce((sum, s) => sum + (s.total || 0), 0).toFixed(2)}
+                      ${(formData.totalAmount * (parseInt(formData.tax_percentage_c) || 5) / 100).toFixed(2)}
                     </span>
                   </div>
-                )}
-                {formData.discount_type_c !== 'None' && (
-                  <div className="flex justify-between text-red-600">
-                    <span>Discount ({formData.discount_type_c}):</span>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Service Charge ({formData.service_charge_percentage_c}%):</span>
                     <span className="font-medium">
-                      -${formData.discount_value_c.toFixed(2)}
+                      ${(formData.totalAmount * (parseFloat(formData.service_charge_percentage_c) || 0) / 100).toFixed(2)}
                     </span>
                   </div>
-                )}
-                <div className="border-t pt-3 mt-3">
-                  <div className="flex justify-between text-lg font-bold">
-                    <span>Total Amount:</span>
-                    <span>${(formData.calculatedTotal || 0).toFixed(2)}</span>
+                  {formData.services.length > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Additional Services:</span>
+                      <span className="font-medium">
+                        ${formData.services.reduce((sum, s) => sum + (s.total || 0), 0).toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                  {formData.discount_type_c !== 'None' && (
+                    <div className="flex justify-between text-red-600">
+                      <span>Discount ({formData.discount_type_c}):</span>
+                      <span className="font-medium">
+                        -${formData.discount_value_c.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="border-t border-blue-300 pt-3 mt-3">
+                    <div className="flex justify-between text-xl font-bold text-blue-700">
+                      <span>Grand Total:</span>
+                      <span>${(formData.calculatedTotal || 0).toFixed(2)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
