@@ -5,13 +5,13 @@ import { format } from "date-fns";
 import { toast } from "react-toastify";
 import invoiceService from "@/services/api/invoiceService";
 import ApperIcon from "@/components/ApperIcon";
-import Loading from "@/components/ui/Loading";
-import ErrorView from "@/components/ui/ErrorView";
-import Empty from "@/components/ui/Empty";
 import StatusBadge from "@/components/molecules/StatusBadge";
 import SearchBar from "@/components/molecules/SearchBar";
-import Button from "@/components/atoms/Button";
+import Loading from "@/components/ui/Loading";
+import Empty from "@/components/ui/Empty";
+import ErrorView from "@/components/ui/ErrorView";
 import Select from "@/components/atoms/Select";
+import Button from "@/components/atoms/Button";
 
 const Billing = () => {
   const navigate = useNavigate();
@@ -292,11 +292,26 @@ INV-{selectedInvoice.Id.toString().padStart(4, '0')}
                     </div>
                     {(() => {
                       const serviceCharges = selectedInvoice.serviceCharges_c || selectedInvoice.serviceCharges || [];
-                      const services = typeof serviceCharges === 'string' ? JSON.parse(serviceCharges) : serviceCharges;
+                      
+                      let services = [];
+                      if (typeof serviceCharges === 'string') {
+                        try {
+                          services = JSON.parse(serviceCharges);
+                        } catch (error) {
+                          console.warn('Failed to parse serviceCharges as JSON:', error.message);
+                          services = serviceCharges.trim() ? [{
+                            name: serviceCharges,
+                            amount: 0
+                          }] : [];
+                        }
+                      } else {
+                        services = serviceCharges;
+                      }
+                      
                       return Array.isArray(services) ? services.map((service, index) => (
                         <div key={index} className="flex justify-between">
-                          <span className="text-gray-600">{service.name}</span>
-                          <span>${service.amount.toLocaleString()}</span>
+                          <span className="text-gray-600">{service.name || 'Unknown Service'}</span>
+                          <span>${(service.amount || 0).toLocaleString()}</span>
                         </div>
                       )) : null;
                     })()}
