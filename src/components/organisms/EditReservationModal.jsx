@@ -128,7 +128,7 @@ const handleInputChange = (field, value) => {
     }));
   };
 
-  const handleServiceChange = (serviceId, field, value) => {
+const handleServiceChange = (serviceId, field, value) => {
     setFormData(prev => ({
       ...prev,
       services: prev.services.map(s => {
@@ -141,13 +141,10 @@ const handleInputChange = (field, value) => {
         }
         return s;
       })
-})
     }));
   };
 
-  const validateForm = () => {
-
-  // Calculate booking summary totals
+// Calculate booking summary totals
   useEffect(() => {
     const roomTotal = formData.totalAmount_c || 0;
     
