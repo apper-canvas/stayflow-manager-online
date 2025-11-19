@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { Card } from "@/components/atoms/Card";
 import reservationService from "@/services/api/reservationService";
 import guestService from "@/services/api/guestService";
 import roomService from "@/services/api/roomService";
 import ApperIcon from "@/components/ApperIcon";
 import FormField from "@/components/molecules/FormField";
+import Guests from "@/components/pages/Guests";
 import Select from "@/components/atoms/Select";
 import Button from "@/components/atoms/Button";
 import SearchableSelect from "@/components/atoms/SearchableSelect";
 import Input from "@/components/atoms/Input";
-import { Card } from "@/components/atoms/Card";
 
 const EditReservationModal = ({ reservation, isOpen, onClose, onUpdate }) => {
 const [formData, setFormData] = useState({
@@ -140,9 +141,39 @@ const handleInputChange = (field, value) => {
         }
         return s;
       })
+})
     }));
   };
 
+  const validateForm = () => {
+
+  // Calculate booking summary totals
+  useEffect(() => {
+    const roomTotal = formData.totalAmount_c || 0;
+    
+    // Calculate tax
+    const taxPercentage = parseInt(formData.tax_percentage_c) || 5;
+    const tax = roomTotal * (taxPercentage / 100);
+    
+    // Calculate service charge
+    const serviceChargePercentage = parseFloat(formData.service_charge_percentage_c) || 0;
+    const serviceCharge = roomTotal * (serviceChargePercentage / 100);
+    
+    // Calculate additional services total
+    const additionalServicesTotal = formData.services.reduce((sum, s) => sum + (parseFloat(s.total) || 0), 0);
+    
+    // Calculate discount
+    const discount = parseFloat(formData.discount_value_c) || 0;
+    
+    // Calculate final total
+    const finalTotal = roomTotal + tax + serviceCharge + additionalServicesTotal - discount;
+    
+    // Store the final calculated total
+    setFormData(prev => ({
+      ...prev,
+      calculatedTotal: Math.max(0, finalTotal) // Ensure total is not negative
+    }));
+  }, [formData.totalAmount_c, formData.tax_percentage_c, formData.service_charge_percentage_c, formData.services, formData.discount_value_c]);
 const validateForm = () => {
     const newErrors = {};
 
@@ -608,8 +639,101 @@ setFormData({
             ) : (
               <p className="text-gray-500 text-center py-4">No services added yet</p>
             )}
-          </Card>
+</Card>
 
+          {/* Booking Summary */}
+          {formData.totalAmount_c > 0 && (
+            <Card className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                <ApperIcon name="FileText" size={20} className="mr-2" />
+                Booking Summary
+              </h2>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Reservation ID:</span>
+                  <span className="font-medium">{formData.reservation_id_c || 'Auto-generated'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Guest:</span>
+                  <span className="font-medium">
+                    {guests.find(g => g.Id == formData.guestId_c) ? 
+                      `${guests.find(g => g.Id == formData.guestId_c).firstName_c || guests.find(g => g.Id == formData.guestId_c).Name} ${guests.find(g => g.Id == formData.guestId_c).lastName_c || ''}` : 
+                      'Not selected'
+                    }
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Room:</span>
+                  <span className="font-medium">
+                    {rooms.find(r => r.Id == formData.roomId_c) ? 
+                      `Room ${rooms.find(r => r.Id == formData.roomId_c).number_c || rooms.find(r => r.Id == formData.roomId_c).number} - ${rooms.find(r => r.Id == formData.roomId_c).type_c || rooms.find(r => r.Id == formData.roomId_c).type}` : 
+                      'Not selected'
+                    }
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Dates:</span>
+                  <span className="font-medium">
+                    {formData.checkInDate_c} to {formData.checkOutDate_c}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Nights:</span>
+                  <span className="font-medium">{formData.number_of_nights_c} night{formData.number_of_nights_c !== 1 ? 's' : ''}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Guests:</span>
+                  <span className="font-medium">
+                    {formData.adults_c} Adult{formData.adults_c > 1 ? 's' : ''}
+                    {formData.children_c > 0 && `, ${formData.children_c} Child${formData.children_c > 1 ? 'ren' : ''}`}
+                  </span>
+                </div>
+                <div className="border-t border-blue-200 pt-4 mt-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-700 font-medium">Room Charges:</span>
+                      <span className="font-semibold">${(formData.totalAmount_c || 0).toFixed(2)}</span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Tax ({formData.tax_percentage_c}):</span>
+                      <span className="font-medium">
+                        ${((formData.totalAmount_c || 0) * (parseInt(formData.tax_percentage_c) || 5) / 100).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Service Charge ({formData.service_charge_percentage_c}%):</span>
+                      <span className="font-medium">
+                        ${((formData.totalAmount_c || 0) * (parseFloat(formData.service_charge_percentage_c) || 0) / 100).toFixed(2)}
+                      </span>
+                    </div>
+                    {formData.services.length > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Additional Services:</span>
+                        <span className="font-medium">
+                          ${formData.services.reduce((sum, s) => sum + (s.total || 0), 0).toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                    {formData.discount_type_c !== 'None' && (
+                      <div className="flex justify-between text-red-600">
+                        <span>Discount ({formData.discount_type_c}):</span>
+                        <span className="font-medium">
+                          -${(formData.discount_value_c || 0).toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="border-t border-blue-300 pt-3 mt-3">
+                      <div className="flex justify-between text-xl font-bold text-blue-700">
+                        <span>Grand Total:</span>
+                        <span>${(formData.calculatedTotal || 0).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
           {/* Additional Information */}
           <Card className="p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Additional Information</h2>
