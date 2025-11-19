@@ -255,8 +255,8 @@ const validateForm = () => {
     if (formData.adults < 1) errors.adults = "At least 1 adult is required";
     if (formData.children < 0) errors.children = "Children count cannot be negative";
     
-    // Validate occupancy against room capacity
-    if (selectedRoomDetails && (formData.adults + formData.children) > (selectedRoomDetails.maxOccupancy_c || selectedRoomDetails.maxOccupancy || 4)) {
+// Validate occupancy against room capacity
+    if (selectedRoomDetails && (parseInt(formData.adults) + parseInt(formData.children)) > (selectedRoomDetails.maxOccupancy_c || selectedRoomDetails.maxOccupancy || 4)) {
       errors.adults = `Room capacity exceeded. Maximum ${selectedRoomDetails.maxOccupancy_c || selectedRoomDetails.maxOccupancy || 4} guests allowed`;
     }
     
