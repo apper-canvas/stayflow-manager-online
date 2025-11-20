@@ -302,6 +302,7 @@ const handleRoomStatusChange = async (roomId, newStatus) => {
         allRooms={allRooms}
       />
     </div>
-  );
+);
+};
 
 export default Dashboard;
