@@ -287,13 +287,12 @@ const handleRoomStatusChange = async (roomId, newStatus) => {
                     <span>$2,450</span>
                   </div>
                 </div>
-              </div>
+</div>
             </CardContent>
-</Card>
+          </Card>
         </div>
       </div>
-      
-      </div>
+
       {/* Edit Room Modal */}
       <RoomDetailsModal
         room={selectedRoom}
@@ -303,6 +302,6 @@ const handleRoomStatusChange = async (roomId, newStatus) => {
         allRooms={allRooms}
       />
     </div>
-};
+  );
 
 export default Dashboard;
