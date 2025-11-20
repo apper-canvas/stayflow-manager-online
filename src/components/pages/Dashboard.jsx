@@ -1,17 +1,18 @@
-import { useState, useEffect } from "react";
-import DashboardStats from "@/components/organisms/DashboardStats";
-import RoomCard from "@/components/molecules/RoomCard";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/Card";
-import Button from "@/components/atoms/Button";
-import StatusBadge from "@/components/molecules/StatusBadge";
-import Loading from "@/components/ui/Loading";
-import ErrorView from "@/components/ui/ErrorView";
-import ApperIcon from "@/components/ApperIcon";
-import roomService from "@/services/api/roomService";
-import reservationService from "@/services/api/reservationService";
-import housekeepingService from "@/services/api/housekeepingService";
 import { toast } from "react-toastify";
 import { format } from "date-fns";
+import housekeepingService from "@/services/api/housekeepingService";
+import reservationService from "@/services/api/reservationService";
+import roomService from "@/services/api/roomService";
+import ApperIcon from "@/components/ApperIcon";
+import StatusBadge from "@/components/molecules/StatusBadge";
+import RoomCard from "@/components/molecules/RoomCard";
+import Loading from "@/components/ui/Loading";
+import ErrorView from "@/components/ui/ErrorView";
+import DashboardStats from "@/components/organisms/DashboardStats";
+import RoomDetailsModal from "@/components/organisms/RoomDetailsModal";
+import Button from "@/components/atoms/Button";
 
 // Utility function to validate dates before formatting
 const isValidDate = (date) => {
@@ -25,11 +26,14 @@ const formatSafeDate = (date, formatStr) => {
   return format(new Date(date), formatStr);
 };
 const Dashboard = () => {
-  const [recentRooms, setRecentRooms] = useState([]);
+const [recentRooms, setRecentRooms] = useState([]);
   const [todayArrivals, setTodayArrivals] = useState([]);
   const [pendingTasks, setPendingTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [allRooms, setAllRooms] = useState([]);
 
   const loadDashboardData = async () => {
     try {
@@ -67,7 +71,7 @@ const pending = tasks.filter(t => (t.status_c || t.status) === "todo" || (t.stat
     loadDashboardData();
   }, []);
 
-  const handleRoomStatusChange = async (roomId, newStatus) => {
+const handleRoomStatusChange = async (roomId, newStatus) => {
     try {
       const room = recentRooms.find(r => r.Id === roomId);
       if (!room) return;
@@ -80,6 +84,20 @@ const pending = tasks.filter(t => (t.status_c || t.status) === "todo" || (t.stat
     } catch (err) {
       toast.error("Failed to update room status");
     }
+  };
+
+  const handleEditRoom = (room) => {
+    setSelectedRoom(room);
+    setShowEditModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowEditModal(false);
+    setSelectedRoom(null);
+  };
+
+  const handleRoomUpdated = (updatedRoom) => {
+    setRecentRooms(recentRooms.map(r => r.Id === updatedRoom.Id ? updatedRoom : r));
   };
 
   if (loading) return <Loading />;
@@ -122,11 +140,12 @@ const pending = tasks.filter(t => (t.status_c || t.status) === "todo" || (t.stat
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {recentRooms.map((room) => (
+{recentRooms.map((room) => (
                   <RoomCard
                     key={room.Id}
                     room={room}
                     onStatusChange={handleRoomStatusChange}
+                    onClick={handleEditRoom}
                   />
                 ))}
               </div>
@@ -272,9 +291,18 @@ const pending = tasks.filter(t => (t.status_c || t.status) === "todo" || (t.stat
             </CardContent>
           </Card>
         </div>
+</div>
       </div>
+
+      {/* Edit Room Modal */}
+      <RoomDetailsModal
+        room={selectedRoom}
+        isOpen={showEditModal}
+        onClose={handleCloseModal}
+        onRoomUpdated={handleRoomUpdated}
+        allRooms={allRooms}
+      />
     </div>
-  );
 };
 
 export default Dashboard;
