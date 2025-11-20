@@ -289,11 +289,11 @@ const handleRoomStatusChange = async (roomId, newStatus) => {
                 </div>
               </div>
             </CardContent>
-          </Card>
+</Card>
         </div>
-</div>
       </div>
-
+      
+      </div>
       {/* Edit Room Modal */}
       <RoomDetailsModal
         room={selectedRoom}
